@@ -497,7 +497,7 @@ class NoOperationLogger:
 
 def get_includes_and_excludes_from_pattern(pattern):
     if pattern == '':
-        return ['*'], []
+        return [], []
     pattern = pattern.replace('AND', '&')
     ands = []
     nots = []
