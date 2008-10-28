@@ -35,7 +35,7 @@ def main():
           packages     = ['mabot', 'mabot.model', 'mabot.settings', 
                           'mabot.ui', 'mabot.utils'],
           package_data = { 'mabot': ['ui/icons/*.gif']},
-          scripts      = [ join(dirname(__file__), 'src', 'bin', 'mabot.py') ]
+          scripts      = [ 'src/bin/mabot.py' ]
           )
 
 def _get_version():        
