@@ -9,7 +9,7 @@ formats as Robot Framework. It has following features:
 
  - Manual test cases can be saved to same format as automated tests.
  - Easy and simple way for marking test execution results.
- - Tagging functionality allows easy statistics 
+ - Tagging functionality makes it easy to collect statistics 
  - Same output format with Robot Framework allows combining manual and 
    automated tests' results to one report.
 
