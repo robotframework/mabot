@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20080822 08:59:02.703" generator="Robot trunk 20080820 (Python 2.5.2 on win32)">
+<suite name="Suites">
+<doc></doc>
+<metadata>
+</metadata>
+<critical>
+</critical>
+<filtered>
+</filtered>
+<suite name="Testcases">
+<doc></doc>
+<metadata>
+</metadata>
+<critical>
+</critical>
+<filtered>
+</filtered>
+<test critical="yes" name="Passing" timeout="">
+<doc></doc>
+<tags>
+<tag>pass</tag>
+</tags>
+<kw type="kw" name="BuiltIn.Log" timeout="">
+<doc>Logs the given message with the given level</doc>
+<arguments>
+<arg>Hello</arg>
+</arguments>
+<msg timestamp="20080822 08:59:02.717" html="no" level="INFO">Hello</msg>
+<status status="PASS" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.703"></status>
+</kw>
+<status status="PASS" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.703"></status>
+</test>
+<test critical="yes" name="Failing" timeout="">
+<doc></doc>
+<tags>
+<tag>fail</tag>
+</tags>
+<kw type="kw" name="BuiltIn.Fail" timeout="">
+<doc>Fails the test immediately with the given message.</doc>
+<arguments>
+<arg>Failure</arg>
+</arguments>
+<msg timestamp="20080822 08:59:02.717" html="no" level="FAIL">Failure</msg>
+<msg timestamp="20080822 08:59:02.717" html="no" level="INFO">Traceback (most recent call last):
+  File "C:\APPS\Python25\Lib\site-packages\robot\libraries\BuiltIn.py", line 96, in fail
+    asserts.fail(msg)
+  File "C:\APPS\Python25\Lib\site-packages\robot\utils\asserts.py", line 105, in fail
+    _report_failure(msg)
+  File "C:\APPS\Python25\Lib\site-packages\robot\utils\asserts.py", line 225, in _report_failure
+    raise AssertionError(msg)</msg>
+<status status="FAIL" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.717"></status>
+</kw>
+<status status="FAIL" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.717">Failure</status>
+</test>
+<status status="FAIL" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.703"></status>
+</suite>
+<suite name="Testcases 2">
+<doc></doc>
+<metadata>
+</metadata>
+<critical>
+</critical>
+<filtered>
+</filtered>
+<test critical="yes" name="Passing" timeout="">
+<doc></doc>
+<tags>
+<tag>pass</tag>
+</tags>
+<kw type="kw" name="BuiltIn.Log" timeout="">
+<doc>Logs the given message with the given level</doc>
+<arguments>
+<arg>Hello</arg>
+</arguments>
+<msg timestamp="20080822 08:59:02.717" html="no" level="INFO">Hello</msg>
+<status status="PASS" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.717"></status>
+</kw>
+<status status="PASS" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.717"></status>
+</test>
+<test critical="yes" name="Failing" timeout="">
+<doc></doc>
+<tags>
+<tag>fail</tag>
+</tags>
+<kw type="kw" name="BuiltIn.Fail" timeout="">
+<doc>Fails the test immediately with the given message.</doc>
+<arguments>
+<arg>Failure</arg>
+</arguments>
+<msg timestamp="20080822 08:59:02.717" html="no" level="FAIL">Failure</msg>
+<msg timestamp="20080822 08:59:02.717" html="no" level="INFO">Traceback (most recent call last):
+  File "C:\APPS\Python25\Lib\site-packages\robot\libraries\BuiltIn.py", line 96, in fail
+    asserts.fail(msg)
+  File "C:\APPS\Python25\Lib\site-packages\robot\utils\asserts.py", line 105, in fail
+    _report_failure(msg)
+  File "C:\APPS\Python25\Lib\site-packages\robot\utils\asserts.py", line 225, in _report_failure
+    raise AssertionError(msg)</msg>
+<status status="FAIL" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.717"></status>
+</kw>
+<status status="FAIL" endtime="20080822 08:59:02.717" starttime="20080822 08:59:02.717">Failure</status>
+</test>
+<test critical="yes" name="One More" timeout="">
+<doc></doc>
+<tags>
+</tags>
+<kw type="kw" name="DeprecatedBuiltIn.Noop" timeout="">
+<doc>No operation.</doc>
+<arguments>
+</arguments>
+<status status="PASS" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.717"></status>
+</kw>
+<status status="PASS" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.717"></status>
+</test>
+<status status="FAIL" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.717"></status>
+</suite>
+<suite name="Tsv Testcases">
+<doc></doc>
+<metadata>
+</metadata>
+<critical>
+</critical>
+<filtered>
+</filtered>
+<test critical="yes" name="First One" timeout="">
+<doc></doc>
+<tags>
+</tags>
+<kw type="kw" name="DeprecatedBuiltIn.Noop" timeout="">
+<doc>No operation.</doc>
+<arguments>
+</arguments>
+<status status="PASS" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.733"></status>
+</kw>
+<status status="PASS" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.733"></status>
+</test>
+<status status="PASS" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.733"></status>
+</suite>
+<status status="FAIL" endtime="20080822 08:59:02.733" starttime="20080822 08:59:02.687"></status>
+</suite>
+<statistics>
+<total>
+<stat fail="2" pass="4">Critical Tests</stat>
+<stat fail="2" pass="4">All Tests</stat>
+</total>
+<tag>
+<stat fail="2" info="" pass="0">fail</stat>
+<stat fail="0" info="" pass="2">pass</stat>
+</tag>
+<suite>
+<stat fail="2" doc="Suites" pass="4">Suites</stat>
+<stat fail="1" doc="Suites.Testcases" pass="1">s.Testcases</stat>
+<stat fail="1" doc="Suites.Testcases 2" pass="2">s.Testcases 2</stat>
+<stat fail="0" doc="Suites.Tsv Testcases" pass="1">s.Tsv Testcases</stat>
+</suite>
+</statistics>
+<syslog>
+</syslog>
+</robot>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20080821 17:35:16.874" generator="Robot trunk 20080820 (Python 2.5.2 on win32)">
+<suite name="Testcases 2">
+<doc></doc>
+<metadata>
+</metadata>
+<critical>
+</critical>
+<filtered>
+</filtered>
+<test critical="yes" name="Passing" timeout="">
+<doc></doc>
+<tags>
+<tag>pass</tag>
+</tags>
+<kw type="kw" name="BuiltIn.Log" timeout="">
+<doc>Logs the given message with the given level</doc>
+<arguments>
+<arg>Hello</arg>
+</arguments>
+<msg timestamp="20080821 17:35:16.921" html="no" level="INFO">Hello</msg>
+<status status="PASS" endtime="20080821 17:35:16.921" starttime="20080821 17:35:16.904"></status>
+</kw>
+<status status="PASS" endtime="20080821 17:35:16.921" starttime="20080821 17:35:16.904"></status>
+</test>
+<test critical="yes" name="Failing" timeout="">
+<doc></doc>
+<tags>
+<tag>fail</tag>
+</tags>
+<kw type="kw" name="BuiltIn.Fail" timeout="">
+<doc>Fails the test immediately with the given message.</doc>
+<arguments>
+<arg>Failure</arg>
+</arguments>
+<msg timestamp="20080821 17:35:16.921" html="no" level="FAIL">Failure</msg>
+<msg timestamp="20080821 17:35:16.921" html="no" level="INFO">Traceback (most recent call last):
+  File "C:\APPS\Python25\Lib\site-packages\robot\libraries\BuiltIn.py", line 96, in fail
+    asserts.fail(msg)
+  File "C:\APPS\Python25\Lib\site-packages\robot\utils\asserts.py", line 105, in fail
+    _report_failure(msg)
+  File "C:\APPS\Python25\Lib\site-packages\robot\utils\asserts.py", line 225, in _report_failure
+    raise AssertionError(msg)</msg>
+<status status="FAIL" endtime="20080821 17:35:16.921" starttime="20080821 17:35:16.921"></status>
+</kw>
+<status status="FAIL" endtime="20080821 17:35:16.921" starttime="20080821 17:35:16.921">Failure</status>
+</test>
+<status status="FAIL" endtime="20080821 17:35:16.921" starttime="20080821 17:35:16.687"></status>
+</suite>
+<statistics>
+<total>
+<stat fail="1" pass="1">Critical Tests</stat>
+<stat fail="1" pass="1">All Tests</stat>
+</total>
+<tag>
+<stat fail="1" info="" pass="0">fail</stat>
+<stat fail="0" info="" pass="1">pass</stat>
+</tag>
+<suite>
+<stat fail="1" doc="Testcases" pass="1">Testcases</stat>
+</suite>
+</statistics>
+<syslog>
+</syslog>
+</robot>
