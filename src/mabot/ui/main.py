@@ -162,7 +162,7 @@ class Mabot:
         self._change_visibility()
         self.suite.update_status_and_message()
         self._init_tree_view()
-        self.create_new_editor()
+        self._create_new_editor()
 
     def _init_tree_view(self):
         item = SuiteTreeItem(self.suite)
@@ -187,7 +187,7 @@ class Mabot:
         else:
             self._active_node.item.model_item.update_status_and_message(status, message)
         self.node.update()
-        self.create_new_editor()
+        self._create_new_editor()
             
     def _add_tag(self, event=None):
         if self._active_node is not None \
@@ -211,12 +211,12 @@ class Mabot:
     
     def _add_new_tag(self, tag):
         self._active_node.item.model_item.add_tag(tag)
-        self.create_new_editor()
+        self._create_new_editor()
         self._update_visibility()
 
     def _remove_old_tag(self, tag):
         self._active_node.item.model_item.remove_tag(tag)
-        self.create_new_editor()
+        self._create_new_editor()
         self._update_visibility()
             
     def _no_node_selected(self, message=None):
@@ -227,10 +227,10 @@ class Mabot:
     def notify_select(self, tree_node):
         if self._active_node is None or tree_node != self._active_node:
             self._active_node = tree_node
-            self.create_new_editor()
+            self._create_new_editor()
             self._statusbar_right.configure(text='')
                 
-    def create_new_editor(self):
+    def _create_new_editor(self):
         self.current_editor.close()
         self.current_editor = Editor(self.editor_frame, self._active_node)
 
@@ -253,6 +253,7 @@ class Mabot:
                 self._init_tree_view()
                 self.notify_select(self.node)
                 self._update_visibility()
+                self._create_new_editor()
             if path is not None:
                 self._statusbar_right.configure(text='Wrote output to: ' + path)
             else:

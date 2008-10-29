@@ -71,6 +71,22 @@ class EmptySuite:
     def get_all_visible_tags(self):
         return []   
 
+
+class UserKeywordLibrary:
+    
+    def __init__(self):
+        self.keywords = {}
+
+    def add_suite_keywords(self, suite):
+        self.keywords = suite.user_keywords.handlers
+
+    def get_keywords(self, name):
+        if self.keywords.has_key(name):
+            return self.keywords[name].keywords
+        return []
+
+KW_LIB = UserKeywordLibrary()        
+
         
 class AbstractManualModel:
 
@@ -150,21 +166,6 @@ class AbstractManualModel:
         return self.status
 
 
-class UserKeywordLibrary:
-    
-    def __init__(self):
-        self.keywords = {}
-
-    def add_suite_keywords(self, suite):
-        self.keywords = suite.user_keywords.handlers
-
-    def get_keywords(self, name):
-        if self.keywords.has_key(name):
-            return self.keywords[name].keywords
-        return []
-
-KW_LIB = UserKeywordLibrary()        
-
 class ManualSuite(RunnableTestSuite, AbstractManualModel):
     
     def __init__(self, suite, parent=None, from_xml=False):
@@ -232,27 +233,47 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             for suite in self.suites:
                 if suite.name == sub_suite.name:
                     suite.add_results_from_other_suite(sub_suite)
-                    break
+                    break        
         for result_test in other_suite.tests:
-            index = 0
             for test in self.tests:
                 if test.name == result_test.name:
                     if self._has_same_keywords(test, result_test):
-                        visible = self.tests[index]
-                        self.tests[index] = ManualTest(result_test, self, True)
-                        self.tests[index].visible = visible
-                    else:
+                        self._copy_results_from(test, result_test, self.tests)
                         break
-                index += 1
         self._update_status()
                 
-    def _has_same_keywords(self, test1, test2):
-        if len(test1.keywords) != len(test2.keywords):
+    def _copy_results_from(self, test1, test2, tests):
+        new_test =  ManualTest(test2, self, True)
+        print new_test.message
+        print new_test.status
+        new_test.is_modified = False
+        tests[tests.index(test1)] = new_test
+    
+    def _has_same_keywords(self, item1, item2):
+        if len(item1.keywords) != len(item2.keywords):
             return False
-        for kw1, kw2 in zip(test1.keywords, test2.keywords):
+        for kw1, kw2 in zip(item1.keywords, item2.keywords):
             if kw1.name.split('.')[-1] != kw2.name.split('.')[-1]:
                 return False
+            else:
+                return self._has_same_keywords(kw1, kw2)
         return True
+
+    def load_new_changes_from_xml(self, other_suite, override_method):
+        for sub_suite in other_suite.suites:
+            for suite in self.suites:
+                if suite.name == sub_suite.name:
+                    suite.load_new_changes_from_xml(sub_suite, override_method)
+                    break
+        for reloaded_test in other_suite.tests:
+            for test in self.tests:
+                if test.name == reloaded_test.name:
+                    if test._update_test(reloaded_test, override_method):
+                        print 'Updating The Test'
+                        self._copy_results_from(test, reloaded_test, self.tests)
+                        break
+        print ', '.join([ i.status for i in self.tests ])
+        self._update_status()
     
     def add_tag(self, tag):
         if not self.visible:
@@ -276,26 +297,6 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
         for item in self.suites+self.tests:
             item.update_default_message(old_default, new_default)
         
-    def load_new_changes_from_xml(self, other_suite, override_method):
-        for sub_suite in other_suite.suites:
-            for suite in self.suites:
-                if suite.name == sub_suite.name:
-                    suite.load_new_changes_from_xml(sub_suite, override_method)
-                    break
-        for reloaded_test in other_suite.tests:
-            index = 0
-            for test in self.tests:
-                if test.name == reloaded_test.name:
-                    if test._update_test(reloaded_test, override_method):
-                        visible = self.tests[index]
-                        self.tests[index] = ManualTest(reloaded_test, self, True)
-                        self.tests[index].visible = visible
-                        DATA_MODIFIED.modified()
-                    else:
-                        break
-                index += 1
-        self._update_status()
-
     def save(self):
         self._save(robot_utils.get_timestamp())
         
@@ -407,7 +408,9 @@ Do you want your changes to be overridden?"""
         message = message % (self.longname, self.status, self.message, 
                              ', '.join(self.tags), reloaded_test.status, 
                              reloaded_test.message, ', '.join(reloaded_test.tags))
-        return dialog("Conflicting Test Results!", message)
+        return_value = dialog("Conflicting Test Results!", message)
+        print return_value
+        return return_value
 
     def _is_positive_elapsed_time(self, elapsed):
         return elapsed != '00:00:00.000' and not elapsed.startswith('-')
@@ -444,7 +447,7 @@ class ManualKeyword (AbstractManualModel):
                 self.messages = []
                 self.message = self._get_default_message()
                 self.msg_timestamp = self.msg_level = None 
-            self.keywords = kw.keywords
+            self.keywords = [ ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords ]
         else:
             self.messages = []
             self.message = ""
