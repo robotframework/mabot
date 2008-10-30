@@ -21,7 +21,7 @@ from mabot.model.model import get_includes_and_excludes_from_pattern
 class TestGetIncludesAndExcludesFromPattern(unittest.TestCase):
 
     def test_empty(self):
-        self._test_pattern('', ['*'], [])
+        self._test_pattern('', [], [])
 
     def test_star_only(self):
         self._test_pattern('*', ['*'], [])
