@@ -60,7 +60,7 @@ class Mabot:
             tkMessageBox.showerror('Loading Failed!', error[0])
             if self.suite:
                 return
-            self.suite = self.io.load_data(None, None)
+            self.suite = self.io.load_data(None)
         self._create_root()
         self._create_menu()
         self._create_middle_window()

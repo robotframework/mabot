@@ -244,8 +244,6 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
                 
     def _copy_results_from(self, test1, test2, tests):
         new_test =  ManualTest(test2, self, True)
-        print new_test.message
-        print new_test.status
         new_test.is_modified = False
         tests[tests.index(test1)] = new_test
     
@@ -269,10 +267,8 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             for test in self.tests:
                 if test.name == reloaded_test.name:
                     if test._update_test(reloaded_test, override_method):
-                        print 'Updating The Test'
                         self._copy_results_from(test, reloaded_test, self.tests)
                         break
-        print ', '.join([ i.status for i in self.tests ])
         self._update_status()
     
     def add_tag(self, tag):
@@ -408,9 +404,7 @@ Do you want your changes to be overridden?"""
         message = message % (self.longname, self.status, self.message, 
                              ', '.join(self.tags), reloaded_test.status, 
                              reloaded_test.message, ', '.join(reloaded_test.tags))
-        return_value = dialog("Conflicting Test Results!", message)
-        print return_value
-        return return_value
+        return dialog("Conflicting Test Results!", message)
 
     def _is_positive_elapsed_time(self, elapsed):
         return elapsed != '00:00:00.000' and not elapsed.startswith('-')
