@@ -17,9 +17,9 @@
 
 """Mabot -- Robot Framework's Manual Test Execution Tool
 
-Version: VERSION_NUMBER
+Version: <VERSION>
     
-Starting Mabot:  mabot.py [options] data_source or output
+Usage:  mabot.py [options] data_source or output
   
 Inputs to Mabot are Robot's test suite (HTML, TSV or directory) or output (XML)
 of Mabot or Robot. Mabot can be used to mark test cases' and keywords' status 
@@ -54,12 +54,12 @@ $ mabot.py tests.html
 
 # Or load results from already modified xml
 $ mabot.py output.xml
-
 """
 
 import sys
 
 from robot import utils as robot_utils
+from robot.errors import Information, DataError
 
 from mabot import settings
 from mabot import utils
@@ -68,25 +68,24 @@ from mabot import ui
 from mabot.ui.main import Mabot
 from mabot.version import version
 
+
 def run(args):
-    doc = __doc__.replace("VERSION_NUMBER", version)    
+    ap = robot_utils.ArgumentParser(__doc__, version=version, arg_limits=(0,1))
     try:
-        opts, args = robot_utils.ArgumentParser(doc).parse_args(args)
-    except Exception, err:
-        _exit('[ERROR] %s' % str(err), 1)
-    if opts['help']:
-        _exit(doc)
-    if opts['version']:
-        _exit('Version: Mabot %s' % (version))
-    if len(args) > 1:
-        _exit("[ERROR] Only one datasource is allowed.", 1)
-    Mabot(len(args) == 1 and args[0] or None, opts)
+        opts, args = ap.parse_args(args, help='help', version='version',
+                                   check_args=True)
+    except Information, msg:
+        _exit(str(msg))
+    except DataError, err:
+        _exit(str(err), 1)
+    Mabot(args and args[0] or None, opts)
 
 def _exit(message, rc=0):
     print message
     if rc != 0:
-        print '\n\nTry --help for usage information.'
+        print '\nTry --help for usage information.'
     sys.exit(rc)
 
 if __name__ == '__main__':
     run(sys.argv[1:])
+
