@@ -96,10 +96,19 @@ class AbstractManualModel:
         self.doc = item.doc
         self.name = item.name
         self.starttime = self.endtime = '00000000 00:00:00.000'
-        self.status = hasattr(item, 'status') and item.status or 'FAIL'
-        #self.status = from_xml and item.status or 'FAIL'
+        self.status = self._get_status(item)
         self.visible = True
 
+    def _get_status(self, item):
+        """Gets the status correctly from robot.running and robot.output items. 
+        
+        Works also with changes done to Robot Framework 2.0.3.
+        """
+        status = hasattr(item, 'status') and item.status or 'FAIL'
+        if status not in ['PASS', 'FAIL']:
+            status = 'FAIL'
+        return status
+        
     def set_all(self, status, message=None):
         for item in self._get_items():
             item.set_all(status, message)
