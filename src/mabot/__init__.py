@@ -59,7 +59,6 @@ $ mabot.py output.xml
 import sys
 
 from robot import utils as robot_utils
-from robot.errors import Information, DataError
 
 from mabot import settings
 from mabot import utils
@@ -69,16 +68,36 @@ from mabot.ui.main import Mabot
 from mabot.version import version
 
 
-def run(args):
-    ap = robot_utils.ArgumentParser(__doc__, version=version, arg_limits=(0,1))
-    try:
-        opts, args = ap.parse_args(args, help='help', version='version',
-                                   check_args=True)
-    except Information, msg:
-        _exit(str(msg))
-    except DataError, err:
-        _exit(str(err), 1)
-    Mabot(args and args[0] or None, opts)
+try:
+    # Robot Framework 2.0.3 -> 
+    from robot.errors import Information, DataError
+
+    def run(args):
+        ap = robot_utils.ArgumentParser(__doc__, version=version, arg_limits=(0,1))
+        try:
+            opts, args = ap.parse_args(args, help='help', version='version',
+                                       check_args=True)
+        except Information, msg:
+            _exit(str(msg))
+        except DataError, err:
+            _exit(str(err), 1)
+        Mabot(args and args[0] or None, opts)
+
+except ImportError:
+    # Robot Framework <- 2.0.3  
+    def run(args):
+        doc = __doc__.replace("<VERSION>", version)    
+        try:
+            opts, args = robot_utils.ArgumentParser(doc).parse_args(args)
+        except Exception, err:
+            _exit('[ERROR] %s' % str(err), 1)
+        if opts['help']:
+            _exit(doc)
+        if opts['version']:
+            _exit('Version: Mabot %s' % (version))
+        if len(args) > 1:
+            _exit("[ERROR] Only one datasource is allowed.", 1)
+        Mabot(len(args) == 1 and args[0] or None, opts)
 
 def _exit(message, rc=0):
     print message
