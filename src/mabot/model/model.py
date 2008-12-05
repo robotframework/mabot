@@ -104,10 +104,8 @@ class AbstractManualModel:
         
         Works also with changes done to Robot Framework 2.0.3.
         """
-        status = hasattr(item, 'status') and item.status or 'FAIL'
-        if status not in ['PASS', 'FAIL']:
-            status = 'FAIL'
-        return status
+        status = getattr(item, 'status', 'FAIL')
+        return status == 'PASS' and 'PASS' or 'FAIL'
         
     def set_all(self, status, message=None):
         for item in self._get_items():
