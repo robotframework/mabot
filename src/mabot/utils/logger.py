@@ -13,10 +13,12 @@
 #  limitations under the License.
 
 
-from robot.utils import *
+class NoOperationLogger:
+    
+    def __getattr__(self, name):
+        return self.noop
+    
+    def noop(self, *args, **kwargs):
+        pass
 
-from logger import LOGGER
-from io import load_data
-from lock import LockFile
-from utils import get_tags_from_string, get_status_color
-
+LOGGER = NoOperationLogger()

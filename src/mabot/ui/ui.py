@@ -24,12 +24,9 @@ START = 1.0
 
 class TextMessageDialog(AbstractTkDialog):
 
-    def __init__(self, parent, title, comment, height=5, width=40, 
-                 scrollable=False, message=""):
+    def __init__(self, parent, title, comment, height=5, width=40, message=""):
         self.message = message
         self.comment = comment
-        #TODO: Not implemented!!
-        self.scrollable = scrollable
         self.width=width
         self.height=height
         AbstractTkDialog.__init__(self, parent, title)
@@ -75,7 +72,7 @@ class SettingsDialog(AbstractTkDialog):
 
     def _ask_additional_tags_at_startup(self, master, row):
         self.ask_additional_tags_at_startup = self._create_radio_buttons(master, 
-            "Ask Additional Tags At Startup:", SETTINGS["ask_additional_tags_at_startup"], row)
+            "Ask Additional Tags at Start Up:", SETTINGS["ask_additional_tags_at_startup"], row)
 
     def _addition_tags_for_executed_test(self, master, row):
         self.addition_tags = self._create_entry(master, "Additional Tags (i.e. executed-by-x, build-y):", 
@@ -83,7 +80,7 @@ class SettingsDialog(AbstractTkDialog):
 
     def _always_load_old_data_from_xml(self, master, row):
         self.always_load_old_data_from_xml = self._create_radio_buttons(master, 
-            "Always Load Old Data From Xml:", SETTINGS["always_load_old_data_from_xml"], row)
+            "Always Load Old Data from Xml:", SETTINGS["always_load_old_data_from_xml"], row)
     
     def _check_simultaneous_save(self, master, row):
         self.check_simultaneous_save = self._create_radio_buttons(master, 
@@ -148,14 +145,14 @@ class ChangeStatusDialog(TextMessageDialog):
 
     def __init__(self, parent):
         TextMessageDialog.__init__(self, parent, "Set Failed",
-                                   "Give reason for failure:" , 5, 50, False, 
+                                   "Give reason for failure:" , 5, 50, 
                                    SETTINGS["default_message"])
 
 class EditTagDialog(TextMessageDialog):
 
     def __init__(self, parent, type):
         TextMessageDialog.__init__(self, parent, type + " Tag",
-                                   "Give tag:", 2, 20, False)
+                                   "Give tag:", 2, 20)
 
 class AskAdditionalTagsDialog(TextMessageDialog):
 
@@ -163,7 +160,7 @@ class AskAdditionalTagsDialog(TextMessageDialog):
         label = """Give tag(s) that you want to add to all the test cases
 you are going to report (i.e. env-x, build-y):"""
         TextMessageDialog.__init__(self, parent, "Additional Tags", label,
-                                   1, 50, message=data)
+                                   1, 50, data)
 
 
 class CommonFrame(Frame):

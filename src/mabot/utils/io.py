@@ -13,10 +13,21 @@
 #  limitations under the License.
 
 
-from robot.utils import *
+try:
+    from robot.running import TestSuite
+    from robot.conf import RobotSettings
+except ImportError, error:
+    print """All needed Robot modules could not be imported. 
+Check your Robot installation."""
+    print "Error was: %s" % (error[0])
+    sys.exit(1)
 
-from logger import LOGGER
-from io import load_data
-from lock import LockFile
-from utils import get_tags_from_string, get_status_color
+import logger
 
+
+def load_data(source, settings):
+    robot_settings = RobotSettings()
+    robot_settings['Include'] = settings['include']
+    robot_settings['Exclude'] = settings['exclude']
+    return TestSuite([source], robot_settings, logger.LOGGER)
+    

@@ -18,16 +18,16 @@ from Tkinter import *
 import webbrowser
 
 from ui import *
+from mabot.utils import get_status_color
 
 START = 1.0
 
 def Editor(master, tree_item):
-    editor_type = tree_item.item.model_item.class_type
-    if editor_type == 'SUITE':
+    if tree_item.item.model_item.is_suite():
         return SuiteEditor(master, tree_item)
-    elif editor_type == 'TEST':
+    elif tree_item.item.model_item.is_test():
         return TestEditor(master, tree_item)
-    elif editor_type == 'KEYWORD':
+    elif tree_item.item.model_item.is_keyword():
         return KeywordEditor(master, tree_item)
 
 class AbstractEditor:
@@ -41,7 +41,7 @@ class AbstractEditor:
         self._editor.pack(fill=BOTH)
 
     def _create_name(self, master):
-        self._create_title_and_data(master, self._class_type, 
+        self._create_title_and_data(master, self._title, 
                                     self._model_item.name)
 
     def _create_documentation(self, master):
@@ -172,7 +172,7 @@ class DataLabel(Text):
 class SuiteEditor(AbstractEditor):
     
     def __init__(self, master, tree_item):
-        self._class_type = 'Test Suite'
+        self._title = 'Test Suite'
         AbstractEditor.__init__(self, master, tree_item)
 
     def _init_data(self, editor):
@@ -208,7 +208,7 @@ class SuiteEditor(AbstractEditor):
 class TestEditor(AbstractEditor):
 
     def __init__(self, master, tree_item):
-        self._class_type = 'Test Case'
+        self._title = 'Test Case'
         AbstractEditor.__init__(self, master, tree_item)
 
     def _init_data(self, editor):
@@ -227,7 +227,7 @@ class TestEditor(AbstractEditor):
 class KeywordEditor(AbstractEditor):
 
     def __init__(self, master, tree_item):
-        self._class_type = 'Keyword'
+        self._title = 'Keyword'
         AbstractEditor.__init__(self, master, tree_item)
 
     def _init_data(self, editor):
@@ -324,8 +324,3 @@ class OpenLink:
                 
     def launch(self, event):
         webbrowser.open(self.content)
-
-
-def get_status_color(item):
-    colours = {"PASS":"green", "FAIL":"red", "NOT_EXECUTED":"black"}
-    return colours[item.get_execution_status()]

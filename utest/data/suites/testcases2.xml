@@ -13,7 +13,7 @@
 <tags>
 <tag>pass</tag>
 </tags>
-<kw type="kw" name="BuiltIn.Log" timeout="">
+<kw type="kw" name="Log" timeout="">
 <doc>Logs the given message with the given level</doc>
 <arguments>
 <arg>Hello</arg>
@@ -28,7 +28,7 @@
 <tags>
 <tag>fail</tag>
 </tags>
-<kw type="kw" name="BuiltIn.Fail" timeout="">
+<kw type="kw" name="Fail" timeout="">
 <doc>Fails the test immediately with the given message.</doc>
 <arguments>
 <arg>Failure</arg>

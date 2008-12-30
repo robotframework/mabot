@@ -39,10 +39,9 @@ Check your Robot installation."""
 
 from model import EmptySuite
 from model import ManualSuite
-from model import NoOperationLogger
 from model import DATA_MODIFIED
 from mabot.settings import SETTINGS
-from mabot.utils.LockFile import LockFile
+from mabot import utils
 
 class IO:
     
@@ -52,36 +51,39 @@ class IO:
         self.output = None
         self.suite = EmptySuite()
 
-    def load_data(self, source):
-        if not source:
+    def load_data(self, path):
+        if not path:
+            # In case empty suite is loaded
             return self.suite
-        xml = self._get_xml_path_from(source)
+        datasource, xml = self._get_datasource_and_xml_from(path)
         xml_suite, xml_error = self._load_xml_file(xml)
-        testdata_suite, data_error = self._load_datasource(source)
-        if xml_suite is not None and testdata_suite is None:
+        testdata_suite, data_error = self._load_datasource(datasource)
+        self._set_suite(testdata_suite, data_error, xml_suite, xml_error)
+        self.output = xml or 'output.xml'
+        return self.suite
+        
+    def _set_suite(self, testdata_suite, data_error, xml_suite, xml_error):
+        if testdata_suite and xml_suite:
+            testdata_suite.add_results(xml_suite)
+            self.suite = testdata_suite
+        elif xml_suite and not data_error:
             self.suite = xml_suite
-        elif testdata_suite is not None:
-            testdata_suite.add_results_from_other_suite(xml_suite)
+        elif testdata_suite and not xml_error:
             self.suite = testdata_suite
         else:
             self._generate_error(xml_error, data_error)
-        self.output = xml is not None and xml or 'output.xml'
-        #TODO: This is not the case if there are some new data loaded
-        DATA_MODIFIED.saved()
-        return self.suite
 
     def _generate_error(self, xml_error, data_error):
         if data_error is not None and xml_error is not None:
-            error = 'Errors were: "%s" and\n"%s"'
-            error = error % (data_error[0], xml_error[0])
+            error = "%s and\n%s" % (data_error[0], xml_error[0])
         elif data_error is not None:
-            error = "Error was: %s" % (data_error[0])
+            error = data_error[0]
         elif xml_error is not None:
-            error = "Error was: %s" % (xml_error[0])
-        raise Exception("Could not load data! %s" % (error))
+            error = xml_error[0]      
+        raise IOError("Could not load data!\n%s\n" % (error))
 
     def _load_xml_file(self, xml):
-        if xml:
+        if xml and os.path.exists(xml):
             try:
                 suite = ManualSuite(XmlTestSuite(xml), None, True)
                 self.xml_generated = self._get_xml_generation_time(xml)
@@ -91,52 +93,67 @@ class IO:
         return None, None
 
     def _load_datasource(self, source):
-        try:
-            settings = RobotSettings()
-            settings['Include'] = SETTINGS['include']
-            settings['Exclude'] = SETTINGS['exclude']
-            suite = ManualSuite(TestSuite([source], settings, 
-                                          NoOperationLogger()))
-            return suite, None
-        except Exception, error:        
-            return None, error
+        if source:
+            try:
+                suite = ManualSuite(utils.load_data(source, SETTINGS))
+                return suite, None
+            except Exception, error:        
+                return None, error
+        return None, None
 
-    def _get_xml_path_from(self, path):
-        if path.endswith('.xml'):
-            return path 
+    def _get_datasource_and_xml_from(self, path):
+        path = os.path.normcase(os.path.abspath(path))
+        root, extension = os.path.splitext(path)
+        msg = "Could not load data!\n"
+        if not os.path.exists(path):
+            msg += "Path '%s' does not exist!" % (path)
+            raise IOError(msg)
+        if not self._is_supported_format(path, extension):
+            msg += "Path '%s' is not in supported format!\n" % (path)
+            msg += "Supported formats are HTML, " 
+            msg += "TSV, XML and Robot Framework's test suite directory." 
+            raise IOError(msg)
+        if extension.lower() == '.xml':
+            return None, path
+
         if not SETTINGS["always_load_old_data_from_xml"]:
-            return None
-        if os.path.isdir(path):
-            return '%s.xml' % (path)
-        if path.endswith('.html'):
-            return path.replace(".html", ".xml")
-        if path.endswith('.tsv'):
-            return path.replace(".tsv", ".xml")
-        return None
+            return path, None
+        else:
+            return path, '%s.xml' % (root)
 
-    def save_data(self):
-        changes = False
-        return_path = None
-        lock = LockFile(self.output)
+    def _is_supported_format(self, path, extension):
+        if os.path.isdir(path):
+            return True
+        return extension.lower() in [ '.html', '.xml', '.tsv' ]
+
+    def save_data(self, output=None, changes=False):
+        if output:
+            self.output = output
+        lock = utils.LockFile(self.output)
         lock.create_lock(self.ask_method)
+        self._reload_data_from_xml()
+        if DATA_MODIFIED.is_modified() or changes:
+            changes = True
+            self._save_data()
+        lock.release_lock()
+        return changes
+
+    def _reload_data_from_xml(self):
         if SETTINGS["always_load_old_data_from_xml"] and \
             SETTINGS["check_simultaneous_save"] and \
             os.path.exists(self.output) and \
             self.xml_generated != self._get_xml_generation_time():
             xml_suite = self._read_xml()
-            if xml_suite is not None:
-                changes = True
-                self.suite.load_new_changes_from_xml(xml_suite, self.ask_method)
-        if DATA_MODIFIED.is_modified():
-            self.suite.save()
-            testoutput = RobotTestOutput(self.suite, NoOperationLogger())
-            testoutput.serialize_output(self.output, self.suite)
-            self.xml_generated = self._get_xml_generation_time()
-            DATA_MODIFIED.saved()
-            return_path = self.output
-            self.suite.saved()
-        content = lock.release_lock()
-        return return_path, changes
+            if xml_suite:
+                self.suite.add_results(xml_suite, True, self.ask_method)
+
+    def _save_data(self):
+        self.suite.save()
+        testoutput = RobotTestOutput(self.suite, utils.LOGGER)
+        testoutput.serialize_output(self.output, self.suite)
+        self.suite.saved()
+        DATA_MODIFIED.saved()
+        self.xml_generated = self._get_xml_generation_time()
     
     def _get_xml_generation_time(self, path=None):
         if path is None:

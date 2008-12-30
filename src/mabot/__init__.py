@@ -58,8 +58,6 @@ $ mabot.py output.xml
 
 import sys
 
-from robot import utils as robot_utils
-
 from mabot import settings
 from mabot import utils
 from mabot import model
@@ -73,7 +71,7 @@ try:
     from robot.errors import Information, DataError
 
     def run(args):
-        ap = robot_utils.ArgumentParser(__doc__, version=version, arg_limits=(0,1))
+        ap = utils.ArgumentParser(__doc__, version=version, arg_limits=(0,1))
         try:
             opts, args = ap.parse_args(args, help='help', version='version',
                                        check_args=True)
@@ -88,7 +86,7 @@ except ImportError:
     def run(args):
         doc = __doc__.replace("<VERSION>", version)    
         try:
-            opts, args = robot_utils.ArgumentParser(doc).parse_args(args)
+            opts, args = utils.ArgumentParser(doc).parse_args(args)
         except Exception, err:
             _exit('[ERROR] %s' % str(err), 1)
         if opts['help']:

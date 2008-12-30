@@ -16,7 +16,7 @@
 import unittest
 import os.path
 
-from mabot.utils.LockFile import LockFile, LockException
+from mabot.utils.lock import LockFile, LockException
 
 
 class MockLockFile(LockFile):

@@ -15,12 +15,13 @@
 
 import os.path
 import sys
+import tkMessageBox
 
 try:
+    from robot.common import UserErrorHandler
     from robot.running.model import RunnableTestSuite, RunnableTestCase
     from robot.output.readers import Message
     from robot.running.namespace import Namespace
-    from robot import utils as robot_utils
 except ImportError, error:
     print """All needed Robot modules could not be imported. 
 Check your Robot installation."""
@@ -28,6 +29,7 @@ Check your Robot installation."""
     sys.exit(1)
 
 from mabot.settings import SETTINGS
+from mabot import utils
 
 class Modified:
     
@@ -39,6 +41,9 @@ class Modified:
     
     def saved(self):
         self.status = False
+    
+    def set(self, status):
+        self.status = status
 
     def is_modified(self):
         return self.status
@@ -55,9 +60,14 @@ class EmptySuite:
         self.parent = None
         self.doc = self.name = self.starttime = self.endtime = ''
         self.status = self.message = ''
-        self.class_type = 'SUITE'
         self.metadata = {}
         self.tests = self.suites = []
+    
+    def __nonzero__(self):
+        return 1
+
+    def is_suite(self):
+        return True
     
     def __getattr__(self, name):
         return self.do_nothing
@@ -66,7 +76,7 @@ class EmptySuite:
         return 'PASS'
 
     def do_nothing(self, *args, **kw_args):
-        return ""     
+        return ""
     
     def get_all_visible_tags(self):
         return []   
@@ -80,10 +90,16 @@ class UserKeywordLibrary:
     def add_suite_keywords(self, suite):
         self.keywords = suite.user_keywords.handlers
 
-    def get_keywords(self, name):
-        if self.keywords.has_key(name):
-            return self.keywords[name].keywords
-        return []
+    def get_keywords(self, name, item):
+        if not self.keywords.has_key(name):
+            return []
+        kw = self.keywords[name]
+        if isinstance(kw, UserErrorHandler):
+            msg = "Could not create keyword '%s' in testcase '%s'.\n%s"
+            msg = msg % (kw.name, item.get_parent_testcase().longname, kw._error)
+            raise Exception(msg)
+        return kw.keywords
+        
 
 KW_LIB = UserKeywordLibrary()        
 
@@ -133,10 +149,11 @@ class AbstractManualModel:
             if override_default or self.message == self._get_default_message():
                 self.set_message(message)
             
-    def _mark_data_modified(self):
+    def _mark_data_modified(self, update_starttime=True):
         DATA_MODIFIED.modified()
         self.is_modified = True
-        self.starttime = robot_utils.get_timestamp()
+        if update_starttime:
+            self.starttime = utils.get_timestamp()
         
     def _update_parent(self):
         if self.parent is not None:
@@ -151,7 +168,7 @@ class AbstractManualModel:
         child_statuses = [ item.status for item in self._get_items() ]
         updated_status = 'FAIL' in child_statuses and 'FAIL' or 'PASS'
         self._set_status_and_message(updated_status)
-
+            
     def _save(self, time):
         if self.is_modified:
             self.endtime = time
@@ -171,6 +188,49 @@ class AbstractManualModel:
            'FAIL' not in [ item.get_execution_status() for item in self._get_items() ]:
             return "NOT_EXECUTED"
         return self.status
+
+    def is_suite(self):
+        return isinstance(self, ManualSuite)
+
+    def is_test(self):
+        return isinstance(self, ManualTest)
+
+    def is_keyword(self):
+        return isinstance(self, ManualKeyword)
+
+
+class AbstractManualTestOrKeyword(AbstractManualModel):
+
+    def _has_same_keywords(self, other):
+        if len(self.keywords) != len(other.keywords):
+            return False
+        for kw1, kw2 in zip(self.keywords, other.keywords):
+            if kw1.name != kw2.name or not kw1._has_same_keywords(kw2):
+                return False
+        return True
+
+    def _add_keywords_results(self, other, override_method):
+        for self_kw, other_kw in zip(self.keywords, other.keywords):
+            self_kw.add_results(other_kw, override_method)
+
+    def _load_other(self, other, override_method):
+        if not override_method:
+            return True
+        if not self._modified_after_loading(other):
+            return False
+        elif not self.is_modified:
+            return True
+        return override_method(*self._create_message_for_duplicate_results(other))
+
+    def _modified_after_loading(self, other):
+        elapsed = utils.get_elapsed_time(self.endtime, other.endtime)
+        return elapsed != '00:00:00.000'
+
+    def _add_info_from_other(self, other):
+        self.starttime = other.starttime
+        self.endtime = other.endtime
+        self.status = other.status
+        self.message = other.message
 
 
 class ManualSuite(RunnableTestSuite, AbstractManualModel):
@@ -192,13 +252,23 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
         self.teardown = suite.teardown
         self.suites = [ManualSuite(sub_suite, self, from_xml) for sub_suite in suite.suites]
         self.tests = [ManualTest(test, self, from_xml) for test in suite.tests]
-        self.class_type = 'SUITE'
         self._update_status()
+        self.source = suite.source
         if from_xml:
             self.starttime = suite.starttime
             self.endtime = suite.endtime
         self.saving = False
-    
+        self._check_no_duplicate_tests()
+        
+    def _check_no_duplicate_tests(self):
+        names = [ test.name for test in self.tests ]
+        for test in self.tests:
+            if names.count(test.name) > 1:
+                msg = "Found test '%s' from suite '%s' %s times.\n"
+                msg += "Mabot supports only unique test case names!"
+                msg = msg % (test.name, self.longname, names.count(test.name)) 
+                raise IOError(msg)
+
     def _update_status(self):
         self.message = ''
         RunnableTestSuite.set_status(self) # From robot.common.model.BaseTestSuite
@@ -210,7 +280,7 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
         RunnableTestSuite._add_test_to_stats(self, test)
 
     def _init_data(self, suite):
-        varz = Namespace(suite, None, NoOperationLogger()).variables
+        varz = Namespace(suite, None, utils.LOGGER).variables
         suite._init_suite(varz)
         for test in suite.tests:
             test._init_test(varz)
@@ -232,52 +302,42 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
                 if status == "FAIL":
                     updated_status = "FAIL"
         return updated_status
-
-    def add_results_from_other_suite(self, other_suite):
-        if other_suite is None or self.name != other_suite.name:
+        
+    def add_results(self, other, add_from_xml=False, override_method=None):
+        if not other or self.name != other.name:
             return None
-        for sub_suite in other_suite.suites:
-            for suite in self.suites:
-                if suite.name == sub_suite.name:
-                    suite.add_results_from_other_suite(sub_suite)
-                    break        
-        for result_test in other_suite.tests:
-            for test in self.tests:
-                if test.name == result_test.name:
-                    if self._has_same_keywords(test, result_test):
-                        self._copy_results_from(test, result_test, self.tests)
-                        break
+        self._add_from_items_to_items(other.suites, self.suites, 
+                                      add_from_xml, override_method)
+        self._add_from_items_to_items(other.tests, self.tests, 
+                                      add_from_xml, override_method)
+        if self._has_new_children(other):
+            self._mark_data_modified(False)                        
         self._update_status()
-                
-    def _copy_results_from(self, test1, test2, tests):
-        new_test =  ManualTest(test2, self, True)
-        new_test.is_modified = False
-        tests[tests.index(test1)] = new_test
-    
-    def _has_same_keywords(self, item1, item2):
-        if len(item1.keywords) != len(item2.keywords):
-            return False
-        for kw1, kw2 in zip(item1.keywords, item2.keywords):
-            if kw1.name.split('.')[-1] != kw2.name.split('.')[-1]:
-                return False
-            else:
-                return self._has_same_keywords(kw1, kw2)
-        return True
 
-    def load_new_changes_from_xml(self, other_suite, override_method):
-        for sub_suite in other_suite.suites:
-            for suite in self.suites:
-                if suite.name == sub_suite.name:
-                    suite.load_new_changes_from_xml(sub_suite, override_method)
-                    break
-        for reloaded_test in other_suite.tests:
-            for test in self.tests:
-                if test.name == reloaded_test.name:
-                    if test._update_test(reloaded_test, override_method):
-                        self._copy_results_from(test, reloaded_test, self.tests)
+    def _add_from_items_to_items(self, other_items, self_items, 
+                                 add_from_xml, override_method):
+        for other_item in other_items:
+            if other_item.name in [ i.name for i in self_items ]:
+                for self_item in self_items:
+                    if self_item.name == other_item.name:
+                        self_item.add_results(other_item, add_from_xml,
+                                          override_method)
                         break
-        self._update_status()
+            elif add_from_xml:
+                self_items.append(other_item) 
+            else:
+                # model != XML
+                self._mark_data_modified(False)                           
     
+    def _has_new_children(self, other):
+        for suite in self.suites:
+            if not suite.name in [ s.name for s in other.suites ]:
+                return True
+        for test in self.tests:
+            if not test.name in [ s.name for s in other.tests ]:
+                return True
+        return False            
+
     def add_tag(self, tag):
         if not self.visible:
             return
@@ -289,19 +349,13 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             return
         for item in self._get_items():
             item.remove_tag(tag)
-
-    def update_tag(self, old_tag, new_tag):
-        if not self.visible:
-            return
-        for item in self.suites + self.tests:
-            item.update_tag(old_tag, new_tag)
     
     def update_default_message(self, old_default, new_default):
         for item in self.suites+self.tests:
             item.update_default_message(old_default, new_default)
         
     def save(self):
-        self._save(robot_utils.get_timestamp())
+        self._save(utils.get_timestamp())
         
     def _save(self, time):
         self.saving = True
@@ -331,7 +385,7 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             self.visible = True
         return self.visible
 
-class ManualTest(RunnableTestCase, AbstractManualModel):
+class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
 
     def __init__(self, test, parent, from_xml=False):
         AbstractManualModel.__init__(self, test, parent)
@@ -347,14 +401,14 @@ class ManualTest(RunnableTestCase, AbstractManualModel):
         self.teardown = test.teardown
         self.tags = test.tags
         self.keywords = [ ManualKeyword(kw, self, from_xml) for kw in test.keywords ]
-        self.class_type = 'TEST'
         self.critical = test.critical
         self.timeout = test.timeout
 
     def _mark_data_modified(self, executed=True):
         AbstractManualModel._mark_data_modified(self)
-        for tag in SETTINGS["additional_tags"]:
-            self.add_tag(tag, mark_modified=False)
+        if executed:
+            for tag in SETTINGS["additional_tags"]:
+                self.add_tag(tag, mark_modified=False)
             
     def _get_items(self):
         return self.keywords
@@ -362,59 +416,99 @@ class ManualTest(RunnableTestCase, AbstractManualModel):
     def _get_default_message(self):
         return SETTINGS["default_message"]
 
+    def add_results(self, other, add_from_xml, override_method=None):
+        if not self._load_other(other, override_method):
+            return
+        if self._has_same_keywords(other):
+            self._add_info_from_other(other)
+            self._add_keywords_results(other, override_method)
+        elif add_from_xml:
+            self._resolve_keywords_results(other)
+        else:
+            self._mark_data_modified(False)
+
+    def _add_info_from_other(self, other):
+        self._add_loaded_tags(other)
+        AbstractManualTestOrKeyword._add_info_from_other(self, other)
+
+    def _resolve_keywords_results(self, other):
+        try:
+            test = self._load_test_from_datasource()
+        except IOError, message:
+            msg = 'Could not check correct model from data source!\n%s'
+            tkMessageBox('Loading Data Source Failed', msg % (error))
+            return
+        if test._has_same_keywords(self):
+            return
+        if test._has_same_keywords(other):
+            test = other
+        else:
+            msg = "Keywords of test '%s' were updated from the data source.\n"
+            msg += "Therefore changes made to those keywords could not be saved.\n"
+            tkMessageBox('Keywords Reloaded', msg % (self.longname))
+        self._add_info_from_other(test)
+        self._copy_keywords(test)
+        self._mark_data_modified(False)
+
+    def _load_test_from_datasource(self):
+        suite = ManualSuite(utils.load_data(self.parent.source, SETTINGS))
+        for test in suite.tests:
+            if test.name == self.name:
+                return test            
+
+    def _copy_keywords(self, other):
+        self.keywords = other.keywords
+        for kw in self.keywords:
+            kw.parent = self
+
+    def _create_message_for_duplicate_results(self, other):
+        message = """Test '%s' updated by someone else!
+Your test information:
+Status: %s
+Message: %s
+Tags: %s
+
+Other test information:
+Status: %s
+Message: %s
+Tags: %s
+
+Do you want your changes to be overridden?"""
+        message = message % (self.longname, self.status, self.message, 
+                             ', '.join(self.tags), other.status, 
+                             other.message, ', '.join(other.tags))
+        return "Conflicting Test Results!", message
+    
+
+    def _add_loaded_tags(self, other):
+        tags = other.tags[:]
+        for tag in self.tags:
+            if tag not in tags:
+                tags.append(tag)
+                self._mark_data_modified(False)
+        self.tags = sorted(tags)
+
     def add_tag(self, tag, mark_modified=True):
         if not self.visible:
             return
-        tag = robot_utils.normalize(tag)
+        tag = utils.normalize(tag)
         if not tag in self.tags:
+            self.tags.append(tag)
+            self.tags.sort()
             if mark_modified:
                 self._mark_data_modified(False)
-            self.tags.append(tag)
- 
-    def update_tag(self, old_tag, new_tag):
-        old_tag = robot_utils.normalize(old_tag)
-        new_tag = robot_utils.normalize(new_tag)
-        if old_tag in self.tags:
-            self._mark_data_modified(False)
-            self.tags[self.tags.index(old_tag)] = new_tag
-            
+             
     def remove_tag(self, tag):
         if not self.visible:
             return
-        tag = robot_utils.normalize(tag)
+        tag = utils.normalize(tag)
         if tag in self.tags:
-            self._mark_data_modified(False)
             self.tags.remove(tag)
+            self._mark_data_modified(False)
             
     def update_default_message(self, old_default, new_default):
         if self.message == old_default:
             self.set_message(new_default)
-
-    def _update_test(self, reloaded_test, dialog):
-        elapsed = robot_utils.get_elapsed_time(self.endtime, reloaded_test.endtime)
-        if not self._is_positive_elapsed_time(elapsed):
-            return False
-        if not self.is_modified and self._is_positive_elapsed_time(elapsed):
-            return True
-        message = """Test '%s' updated by someone else!
-Your test information: 
-Status:%s
-Message:%s
-Tags:%s
-
-Other test information:
-Status:%s
-Message:%s
-Tags:%s
-
-Do you want your changes to be overridden?""" 
-        message = message % (self.longname, self.status, self.message, 
-                             ', '.join(self.tags), reloaded_test.status, 
-                             reloaded_test.message, ', '.join(reloaded_test.tags))
-        return dialog("Conflicting Test Results!", message)
-
-    def _is_positive_elapsed_time(self, elapsed):
-        return elapsed != '00:00:00.000' and not elapsed.startswith('-')
 
     def get_all_visible_tags(self, tags):
         if self.visible:
@@ -432,7 +526,7 @@ Do you want your changes to be overridden?"""
         return self.visible
 
 
-class ManualKeyword (AbstractManualModel):
+class ManualKeyword (AbstractManualTestOrKeyword):
 
     def __init__(self, kw, parent, from_xml):
         AbstractManualModel.__init__(self, kw, parent)
@@ -453,11 +547,21 @@ class ManualKeyword (AbstractManualModel):
             self.messages = []
             self.message = ""
             self.msg_timestamp = self.msg_level = None 
-            self.keywords = [ ManualKeyword(kw, self, False) for kw in KW_LIB.get_keywords(self.name) ]
+            self.keywords = [ ManualKeyword(kw, self, False) for kw in KW_LIB.get_keywords(self.name, self) ]
         self.args = kw.args
         self.type = kw.type
-        self.class_type = 'KEYWORD'
         self.timeout = kw.timeout
+
+    def add_results(self, other, add_from_xml, override_method=None):
+        if not self._load_other(other, override_method):
+            return
+        self._add_info_from_other(other)
+        self._add_keywords_results(other, override_method)
+
+    def get_parent_testcase(self): 
+        if self.parent.is_test():
+            return self.parent
+        return self.parent.get_parent_testcase()
 
     def _get_default_message(self):
         return ''
@@ -471,12 +575,27 @@ class ManualKeyword (AbstractManualModel):
             message.serialize(serializer)
         #TODO: In case there are keywords and messages, the order is not kept in here
         #This can happen when reading XML from (p/j)ybot test execution
-        if self.message != '': 
+        if self.message: 
             ManualMessage(self.message, self.status, self.msg_timestamp, 
                           self.msg_level).serialize(serializer)
         for kw in self.keywords:
             kw.serialize(serializer)
         serializer.end_keyword(self)
+
+    def _create_message_for_duplicate_results(self, other):
+        message = """Keyword '%s' updated by someone else in test case '%s'!
+Your keyword information:
+Status: %s
+Message: %s
+
+Other keyword information:
+Status: %s
+Message: %s
+
+Do you want your changes to be overridden?"""
+        message = message % (self.name, self.get_parent_testcase().longname, 
+                             self.status, self.message, other.status, other.message)
+        return "Conflicting Keyword Results!", message
 
 
 class ManualMessage(Message):
@@ -485,18 +604,8 @@ class ManualMessage(Message):
         self.timestamp = timestamp or '00000000 00:00:00.000'
         status_level = status == 'PASS' and 'INFO' or 'FAIL'
         self.level = level or status_level
-        #TODO: Convert message to html and set self.html to True
         self.message = message
         self.html = False
-
-
-class NoOperationLogger:
-    
-    def __getattr__(self, name):
-        return self.noop
-    
-    def noop(self, *args, **kwargs):
-        pass
 
 
 def get_includes_and_excludes_from_pattern(pattern):
@@ -506,12 +615,12 @@ def get_includes_and_excludes_from_pattern(pattern):
     ands = []
     nots = []
     if 'NOT' in pattern:
-        parts = [ robot_utils.normalize(tag) for tag in pattern.split('NOT') ]
+        parts = [ utils.normalize(tag) for tag in pattern.split('NOT') ]
         if '' not in parts:
             ands = [parts[0]]
             nots = parts[1:]
         else:
             nots = ['*']
     else:
-        ands = [ robot_utils.normalize(pattern) ]
+        ands = [ utils.normalize(pattern) ]
     return ands, nots

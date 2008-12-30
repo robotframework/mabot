@@ -13,10 +13,11 @@
 #  limitations under the License.
 
 
-from robot.utils import *
+def get_tags_from_string(tags_string):
+    """Return list of tags from given string"""
+    tags = tags_string.split(', ')
+    return [ tag for tag in tags if tag ]
 
-from logger import LOGGER
-from io import load_data
-from lock import LockFile
-from utils import get_tags_from_string, get_status_color
-
+def get_status_color(item):
+    colours = {"PASS":"green", "FAIL":"red", "NOT_EXECUTED":"black"}
+    return colours.get(item.get_execution_status(), "black")

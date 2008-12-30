@@ -17,7 +17,10 @@ from Tkinter import *
 from idlelib import TreeWidget
 import os
 
+from mabot.utils import get_status_color
+
 TreeWidget.ICONDIR = os.path.join(os.path.dirname(__file__), 'icons')
+
 
 class Node(TreeWidget.TreeNode):
     
@@ -111,9 +114,3 @@ class KeywordTreeItem(_RobotTreeItem):
     
     def GetIconName(self):
         return 'keyword'
-
-#TODO: "#%02x%02x%02x" % (0, 205, 0), 
-COLOURS = {"PASS":"green", "FAIL":"red", "NOT_EXECUTED":"black"}
-
-def get_status_color(item):
-    return COLOURS[item.get_execution_status()]

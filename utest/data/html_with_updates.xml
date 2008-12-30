@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20081204 10:49:05.015" generator="Rebot 2.0 (Python 2.5.2 on win32)">
+<suite name="Html With Updates">
+<doc></doc>
+<metadata>
+</metadata>
+<critical>
+</critical>
+<filtered>
+</filtered>
+<test critical="yes" name="TC" timeout="">
+<doc></doc>
+<tags>
+</tags>
+<status status="FAIL" endtime="20081204 10:49:05.015" starttime="20081204 10:49:01.078">Failure!</status>
+</test>
+<status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
+</suite>
+<statistics>
+<total>
+<stat fail="1" pass="0">Critical Tests</stat>
+<stat fail="1" pass="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat fail="1" doc="Html With Updates" pass="0">Html With Updates</stat>
+</suite>
+</statistics>
+</robot>

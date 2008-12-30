@@ -40,7 +40,7 @@ class Mabot:
         self.root = Tk()
         self.suite = None
         self._save_options(options)
-        self.io = IO(tkMessageBox.askyesno) 
+        self.io = IO(tkMessageBox.askyesno)
         self._load_data_and_create_ui(datasource)
         self._ask_additional_tags()
         self.root.mainloop()
@@ -56,11 +56,21 @@ class Mabot:
     def _load_data_and_create_ui(self, datasource):
         try:
             self.suite = self.io.load_data(datasource)
+        except IOError, error:
+            self._show_error(error, 'Loading Failed!')
         except Exception, error:
-            tkMessageBox.showerror('Loading Failed!', error[0])
-            if self.suite:
-                return
+            self._show_error(error, "Unexpected error while loading data!")
+        else:
+            self._create_ui()
+
+    def _show_error(self, error, message):
+        # Creates empty UI before showing the error dialog.
+        if not self.suite:
             self.suite = self.io.load_data(None)
+            self._create_ui()
+        tkMessageBox.showerror(message, error[0])            
+
+    def _create_ui(self):
         self._create_root()
         self._create_menu()
         self._create_middle_window()
@@ -191,7 +201,7 @@ class Mabot:
             
     def _add_tag(self, event=None):
         if self._active_node is not None \
-            and self._active_node.item.model_item.class_type != "KEYWORD":
+            and not self._active_node.item.model_item.is_keyword():
             dialog = EditTagDialog(self.root, "Add")
             if dialog.pressed == 'OK':
                 self._add_new_tag(dialog.message)
@@ -201,7 +211,7 @@ class Mabot:
 
     def _remove_tag(self, event=None):
         if self._active_node is not None \
-            and self._active_node.item.model_item.class_type != "KEYWORD":
+            and not self._active_node.item.model_item.is_keyword():
             dialog = EditTagDialog(self.root, "Remove")
             if dialog.pressed == 'OK':
                 self._remove_old_tag(dialog.message)
@@ -246,16 +256,15 @@ class Mabot:
             if directory:
                 self._load_data_and_create_ui(directory)
                 
-    def _save(self, event=None):
+    def _save(self, path=None):
         try:
-            path, changes = self.io.save_data()
-            if changes:
+            if self.io.save_data(path):
                 self._init_tree_view()
                 self.notify_select(self.node)
                 self._update_visibility()
                 self._create_new_editor()
-            if path is not None:
-                self._statusbar_right.configure(text='Wrote output to: ' + path)
+                message = 'Wrote output to: ' + self.io.output
+                self._statusbar_right.configure(text=message)
             else:
                 self._statusbar_right.configure(text='No changes to be saved.')        
         except Exception, error:
@@ -263,9 +272,8 @@ class Mabot:
                     
     def _save_as(self):
         path = tkFileDialog.SaveAs().show()
-        if path != "":
-            self.io.output = path
-            self._save()
+        if path:
+            self._save(path, True)
     
     def _quit(self, event=None):
         if self._continue_without_saving():
@@ -289,6 +297,7 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
     def _create_menu(self):
         menubar = Menu(self.root)
         self._create_file_menu(menubar)
+        self._create_edit_menu(menubar)
         self._create_settings_menu(menubar)
         self._create_tools_menu(menubar)
         self._create_help_menu(menubar)        
@@ -300,14 +309,33 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
         filemenu.add_command(label="Open Dir    Ctrl+O", command=self._open_dir)
         self.root.bind("<Control-o>", self._open_dir)
         filemenu.add_separator()
-        filemenu.add_command(label="Save        Ctrl+S", command=self._save)
-        self.root.bind("<Control-s>", self._save)
+        filemenu.add_command(label="Save        Ctrl+S", command=lambda: self._save())
+        self.root.bind("<Control-s>", lambda x: self._save())
         filemenu.add_command(label="Save As", command=self._save_as)
         filemenu.add_separator()
         filemenu.add_command(label="Quit        Ctrl+Q", command=self._quit)
         self.root.bind("<Control-q>", self._quit)
         menubar.add_cascade(label="File", menu=filemenu)
 
+    def _create_edit_menu(self, menubar):
+        editmenu = Menu(menubar, tearoff=0)
+        editmenu.add_command(label="Cut   Ctrl-X", command=self._cut)
+        self.root.bind("<Control-x>", lambda x: self._cut)
+        editmenu.add_command(label="Copy   Ctrl-C", command=self._copy)
+        self.root.bind("<Control-c>", lambda x: self._copy)
+        editmenu.add_command(label="Paste  Ctrl+V", command=self._paste)
+        self.root.bind("<Control-v>", lambda x: self._paste)
+        menubar.add_cascade(label="Edit", menu=editmenu)
+
+    def _cut(self):
+        self.root.focus_get().event_generate('<<Cut>>')    
+
+    def _copy(self):
+        self.root.focus_get().event_generate('<<Copy>>')    
+    
+    def _paste(self):
+        self.root.focus_get().event_generate('<<Paste>>')
+    
     def _create_settings_menu(self, menubar):
         settingsmenu = Menu(menubar, tearoff=0)
         settingsmenu.add_command(label="Settings", command=self._edit_settings)

@@ -84,9 +84,9 @@ class TestSettingStatusAndMessage(unittest.TestCase):
         self.suite.tests[3].set_all('PASS')
         self.assertEqual(self.suite.status, 'PASS')
 
-# TODO: Should be added when user keywords are supported
-#    def test_pass_all_with_keyword(self):
-#        pass
+    def test_pass_all_with_keyword(self):
+        # TODO: Should be added when user keywords are supported
+        assert False
 
     def test_change_test_status_to_fail(self):
         test = self.suite.tests[0]
