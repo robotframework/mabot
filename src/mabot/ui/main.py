@@ -258,22 +258,27 @@ class Mabot:
                 
     def _save(self, path=None):
         try:
-            if self.io.save_data(path):
+            saved, changes = self.io.save_data(path)
+            if changes:
                 self._init_tree_view()
-                self.notify_select(self.node)
                 self._update_visibility()
                 self._create_new_editor()
-                message = 'Wrote output to: ' + self.io.output
+            if saved:
+                message = 'Wrote output to ' + self.io.output
                 self._statusbar_right.configure(text=message)
             else:
-                self._statusbar_right.configure(text='No changes to be saved.')        
+                if changes:
+                    message = 'Loaded changes from ' + self.io.output
+                    self._statusbar_right.configure(text=message)                            
+                else:
+                    self._statusbar_right.configure(text='No changes to be saved')        
         except Exception, error:
             tkMessageBox.showerror('Saving Failed!', error[0])
                     
     def _save_as(self):
         path = tkFileDialog.SaveAs().show()
         if path:
-            self._save(path, True)
+            self._save(path)
     
     def _quit(self, event=None):
         if self._continue_without_saving():

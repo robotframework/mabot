@@ -209,20 +209,20 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
                 return False
         return True
 
-    def _add_keywords_results(self, other, override_method):
+    def _add_keywords_results(self, other, add_from_xml, override_method):
         for self_kw, other_kw in zip(self.keywords, other.keywords):
-            self_kw.add_results(other_kw, override_method)
+            self_kw.add_results(other_kw, add_from_xml, override_method)
 
     def _load_other(self, other, override_method):
         if not override_method:
             return True
-        if not self._modified_after_loading(other):
+        if not self._saved_after_loading(other):
             return False
         elif not self.is_modified:
             return True
         return override_method(*self._create_message_for_duplicate_results(other))
 
-    def _modified_after_loading(self, other):
+    def _saved_after_loading(self, other):
         elapsed = utils.get_elapsed_time(self.endtime, other.endtime)
         return elapsed != '00:00:00.000'
 
@@ -231,6 +231,7 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
         self.endtime = other.endtime
         self.status = other.status
         self.message = other.message
+        self.is_modified = False
 
 
 class ManualSuite(RunnableTestSuite, AbstractManualModel):
@@ -416,20 +417,20 @@ class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
     def _get_default_message(self):
         return SETTINGS["default_message"]
 
-    def add_results(self, other, add_from_xml, override_method=None):
-        if not self._load_other(other, override_method):
-            return
-        if self._has_same_keywords(other):
+    def add_results(self, other, add_from_xml, override_method):
+        same_keywords = self._has_same_keywords(other)
+        if self._load_other(other, override_method) and same_keywords:
             self._add_info_from_other(other)
-            self._add_keywords_results(other, override_method)
+        if same_keywords:
+            self._add_keywords_results(other, add_from_xml, override_method)
         elif add_from_xml:
             self._resolve_keywords_results(other)
         else:
             self._mark_data_modified(False)
 
     def _add_info_from_other(self, other):
-        self._add_loaded_tags(other)
         AbstractManualTestOrKeyword._add_info_from_other(self, other)
+        self._add_loaded_tags(other)
 
     def _resolve_keywords_results(self, other):
         try:
@@ -552,11 +553,10 @@ class ManualKeyword (AbstractManualTestOrKeyword):
         self.type = kw.type
         self.timeout = kw.timeout
 
-    def add_results(self, other, add_from_xml, override_method=None):
-        if not self._load_other(other, override_method):
-            return
-        self._add_info_from_other(other)
-        self._add_keywords_results(other, override_method)
+    def add_results(self, other, add_from_xml, override_method):
+        if self._load_other(other, override_method):
+            self._add_info_from_other(other)
+        self._add_keywords_results(other, add_from_xml, override_method)
 
     def get_parent_testcase(self): 
         if self.parent.is_test():

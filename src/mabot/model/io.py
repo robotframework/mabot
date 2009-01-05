@@ -126,17 +126,18 @@ class IO:
             return True
         return extension.lower() in [ '.html', '.xml', '.tsv' ]
 
-    def save_data(self, output=None, changes=False):
+    def save_data(self, output=None):
         if output:
             self.output = output
         lock = utils.LockFile(self.output)
         lock.create_lock(self.ask_method)
-        self._reload_data_from_xml()
-        if DATA_MODIFIED.is_modified() or changes:
-            changes = True
+        changes = self._reload_data_from_xml()
+        saved = False
+        if DATA_MODIFIED.is_modified() or output:
             self._save_data()
+            saved = True
         lock.release_lock()
-        return changes
+        return saved, changes
 
     def _reload_data_from_xml(self):
         if SETTINGS["always_load_old_data_from_xml"] and \
@@ -146,6 +147,8 @@ class IO:
             xml_suite = self._read_xml()
             if xml_suite:
                 self.suite.add_results(xml_suite, True, self.ask_method)
+                return True
+        return False
 
     def _save_data(self):
         self.suite.save()

@@ -19,7 +19,7 @@ from unittest import TestCase
 from robot.common.model import BaseTestSuite, BaseTestCase
 
 from mabot.model.io import IO
-from mabot.model import model
+from mabot.model import model 
 
 class _TestAddingData(TestCase):
 
@@ -29,13 +29,12 @@ class _TestAddingData(TestCase):
         self.other_suite = deepcopy(self.suite)        
         self.test = self.suite.suites[1].tests[0]
         self.other_test = deepcopy(self.test)
+        
+    def tearDown(self):
+        model.DATA_MODIFIED.status = False
 
 
 class TestAddDataFromOtherItem(_TestAddingData):
-    
-    def test(self):
-        #TODO: Add check that modified is set when new suites, tests and keywords
-        assert False
     
     def test_adding_suites_sub_suites(self):
         self.other_suite.suites[1].tests[0].set_all('PASS')
@@ -52,17 +51,19 @@ class TestAddDataFromOtherItem(_TestAddingData):
         test = deepcopy(self.other_suite.suites[0].tests[0])
         test.name = 'Added Test'
         self.other_suite.suites[0].tests.append(test)
-        self.suite.add_results(self.other_suite, add_from_xml=False)
+        self.suite.add_results(self.other_suite, False, None)
         self.assertEquals(len(self.suite.suites[0].tests), 1)
         self.assertNotEquals(self.suite.suites[0].tests[0].name, 'Added Test')
+        self.assertEquals(model.DATA_MODIFIED.is_modified(), True)
 
     def test_adding_suites_tests_with_new_test_to_end_with_adding_missing(self):        
         test = deepcopy(self.other_suite.suites[0].tests[0])
         test.name = 'Added Test'
         self.other_suite.suites[0].tests.append(test)
-        self.suite.add_results(self.other_suite, add_from_xml=True)
+        self.suite.add_results(self.other_suite, True, True)
         self.assertEquals(len(self.suite.suites[0].tests), 2)
         self.assertEquals(self.suite.suites[0].tests[1].name, 'Added Test')
+        self.assertEquals(model.DATA_MODIFIED.is_modified(), False)
 
     def test_adding_suites_tests_with_new_test_to_beginning_with_adding_missing(self):        
         test = deepcopy(self.other_suite.suites[0].tests[0])
@@ -72,6 +73,7 @@ class TestAddDataFromOtherItem(_TestAddingData):
         self.assertEquals(len(self.suite.suites[0].tests), 2)
         self.assertEquals(self.suite.suites[0].tests[1].name, 'Added Test', 
                           "Should be added at the end, because there is no order.")        
+        self.assertEquals(model.DATA_MODIFIED.is_modified(), False)
 
     def test_adding_suites_tests_with_removed_test_in_beginning(self):        
         self._test_removed_test(0, False)
@@ -111,7 +113,7 @@ class TestAddDataFromOtherItem(_TestAddingData):
         self.assertEquals(len(self.suite.suites), 3)
         self.assertFalse('Added Test' in [s.name for s in self.suite.suites],
                          "When add_from_xml is false, suite should not be added!")
-
+        
     def test_adding_suites_sub_suites_with_new_sub_suite_with_adding_missing(self):
         suite = deepcopy(self.other_suite.suites[0])
         suite.name = 'Added Suite'
@@ -154,7 +156,7 @@ class TestAddDataFromOtherItem(_TestAddingData):
         test = self.suite.suites[0].tests[0]
         other_test = deepcopy(test)
         other_test.tags.append('new-tag')
-        test.add_results(other_test, False)
+        test.add_results(other_test, False, None)
         self.assertEquals(test.tags, ['new-tag', 'tag-1', 'tag-2', 'tag-3'])
         self.assertFalse(test.is_modified)
 
@@ -162,7 +164,7 @@ class TestAddDataFromOtherItem(_TestAddingData):
         test = self.suite.suites[0].tests[0]
         other_test = deepcopy(test)
         other_test.tags.pop(1)
-        test.add_results(other_test, False)
+        test.add_results(other_test, False, None)
         self.assertEquals(test.tags, ['tag-1', 'tag-2', 'tag-3'])
         self.assertTrue(test.is_modified)
 
@@ -171,7 +173,7 @@ class TestAddDataFromOtherItem(_TestAddingData):
         other_test = deepcopy(test)
         other_test.tags.pop(1)
         other_test.tags.append('new-tag')
-        test.add_results(other_test, False)
+        test.add_results(other_test, False, None)
         self.assertEquals(test.tags, ['new-tag', 'tag-1', 'tag-2', 'tag-3'])
         self.assertTrue(test.is_modified)
     
@@ -181,17 +183,42 @@ class TestAddDataFromOtherItem(_TestAddingData):
         self.assertEquals(self.suite.suites[1].tests[0].keywords[0].status, 'PASS')
         self.assertEquals(self.suite.suites[1].tests[0].keywords[0].keywords[0].status, 'PASS')
 
-    def test_adding_test_results_with_added_keyword(self):
+    def test_adding_tests_keywords_reading_from_xml(self):
+        self.other_suite.suites[1].tests[0].set_all('PASS')
+        self.other_suite.save()
+        self.assertEquals(self.other_suite.suites[1].tests[0].keywords[0].status, 'PASS')
+        self.suite.add_results(self.other_suite, True, True)
+        self.assertEquals(self.suite.suites[1].tests[0].keywords[0].status, 'PASS')
+        self.assertEquals(self.suite.suites[1].tests[0].keywords[0].keywords[0].status, 'PASS')
+
+    def test_adding_test_results_with_added_keyword_not_from_xml(self):
         test = self.suite.suites[1].tests[0]
         kw = deepcopy(test.keywords[0])
         other_test = deepcopy(test)
         other_test.keywords.append(kw)
-        other_test.status = 'PASS'
-        other_test.message = 'Hello'
-        other_test.starttime = '212121 21:21:21'
-        other_test.endtime = '212121 21:21:21'
-        other_test.tags =  ['missing-tag']
-        test.add_results(other_test, False)
+        self._add_info(other_test)
+        test.add_results(other_test, False, None)
+        self._tests_are_unequal(test, other_test)
+        self.assertEquals(model.DATA_MODIFIED.is_modified(), True)
+
+    def test_adding_test_results_with_added_keyword_from_xml(self):
+        test = self.suite.suites[1].tests[0]
+        kw = deepcopy(test.keywords[0])
+        other_test = deepcopy(test)
+        other_test.keywords.append(kw)
+        self._add_info(other_test)
+        test.add_results(other_test, True, True)
+        self._tests_are_unequal(test, other_test)        
+        self.assertEquals(model.DATA_MODIFIED.is_modified(), False)
+
+    def _add_info(self, test):
+        test.status = 'PASS'
+        test.message = 'Hello'
+        test.starttime = '20010101 21:21:21'
+        test.endtime = '20010101 21:21:21'
+        test.tags =  ['missing-tag']
+
+    def _tests_are_unequal(self, test, other_test):
         self.assertNotEquals(test.status, other_test.status)
         self.assertNotEquals(test.message, other_test.message)
         self.assertNotEquals(test.starttime, other_test.starttime)
@@ -203,7 +230,7 @@ class TestAddDataFromOtherItem(_TestAddingData):
         other_test = deepcopy(test)
         other_test.keywords.pop(1)
         other_test.status = 'PASS'
-        test.add_results(other_test, False)
+        test.add_results(other_test, False, None)
         self.assertEquals(test.status, 'FAIL')
 
     def test_adding_tests_keywords_with_added_keyword(self):
@@ -250,7 +277,7 @@ class TestSavingWhenChangesInKeywords(_TestAddingData):
         model.tkMessageBox = self._orig_dialog
 
     def test_changes_in_kws_and_saving_data_when_own_kws_uptodate_and_others_old(self):
-        self.test.add_results(self.other_test, self.dialog.call)
+        self.test.add_results(self.other_test, True, self.dialog.call)
         self.assertEquals(self.test.status, 'PASS')
         self.assertEquals(self.test.message, 'Hello')
         self.assertEquals(self.test.keywords[0].name, 'UK1')
@@ -259,14 +286,14 @@ class TestSavingWhenChangesInKeywords(_TestAddingData):
 
     def test_changes_in_kws_and_saving_data_when_own_kws_old_and_others_uptodate(self):
         self.test.tags.append('extra')
-        self.other_test.add_results(self.test, self.dialog.call)
+        self.other_test.add_results(self.test, True, self.dialog.call)
         self.assertEquals(self.other_test.status, 'PASS')
         self.assertEquals(self.other_test.message, 'Hello')
         self.assertEquals(self.other_test.keywords[0].name, 'UK1')
         self.assertEquals(len(self.dialog.messages), 0)
         self.assertTrue('extra' in self.other_test.tags)
         self.assertTrue(self.other_test.is_modified)
-
+        
     def test_changes_in_kws_and_saving_data_when_own_kws_old_and_others_old(self):
         self.test.keywords.pop(2)
         self.test.add_results(self.other_test, True, self.dialog.call)

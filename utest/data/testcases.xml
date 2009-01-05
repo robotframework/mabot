@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generated="20081020 13:12:50.536" generator="Rebot trunk 20080924 (Python 2.5.2 on win32)">
+<robot generated="20090105 13:12:03.608" generator="Rebot 2.0.3 (Python 2.5.2 on win32)">
 <suite name="Testcases">
 <doc></doc>
 <metadata>
@@ -10,8 +10,6 @@
 </filtered>
 <test critical="yes" name="Passing Test Case With Message" timeout="">
 <doc></doc>
-<tags>
-</tags>
 <kw type="kw" name="Passing Keyword" timeout="">
 <doc></doc>
 <arguments>
@@ -38,12 +36,12 @@
 </arguments>
 <status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
 </kw>
+<tags>
+</tags>
 <status status="PASS" endtime="20081020 13:12:50.536" starttime="20081020 13:12:50.536">Passing</status>
 </test>
 <test critical="yes" name="Passing Test Case Without Message" timeout="">
 <doc></doc>
-<tags>
-</tags>
 <kw type="kw" name="Passing Keyword" timeout="">
 <doc></doc>
 <arguments>
@@ -70,12 +68,12 @@
 </arguments>
 <status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
 </kw>
+<tags>
+</tags>
 <status status="PASS" endtime="20081020 13:12:50.536" starttime="20081020 13:12:50.536"></status>
 </test>
 <test critical="yes" name="Failing Test Case With Message" timeout="">
 <doc></doc>
-<tags>
-</tags>
 <kw type="kw" name="Passing Keyword" timeout="">
 <doc></doc>
 <arguments>
@@ -102,12 +100,12 @@
 </arguments>
 <status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
 </kw>
+<tags>
+</tags>
 <status status="FAIL" endtime="20081020 13:12:50.536" starttime="20081020 13:12:50.536">Failing</status>
 </test>
 <test critical="yes" name="Failing Test Case With Default Message" timeout="">
 <doc></doc>
-<tags>
-</tags>
 <kw type="kw" name="Passing Keyword" timeout="">
 <doc></doc>
 <arguments>
@@ -134,19 +132,68 @@
 </arguments>
 <status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
 </kw>
+<tags>
+</tags>
+<status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000">Not Executed!</status>
+</test>
+<test critical="yes" name="Test Case With User Keywords" timeout="">
+<doc></doc>
+<kw type="kw" name="User Keyword" timeout="">
+<doc></doc>
+<arguments>
+</arguments>
+<msg timestamp="00000000 00:00:00.000" html="no" level="INFO">Passing</msg>
+<kw type="kw" name="Step 1" timeout="">
+<doc></doc>
+<arguments>
+</arguments>
+<msg timestamp="00000000 00:00:00.000" html="no" level="INFO">Passing</msg>
+<status status="PASS" endtime="20090105 13:12:03.608" starttime="20090105 13:11:39.296"></status>
+</kw>
+<kw type="kw" name="Step 2" timeout="">
+<doc></doc>
+<arguments>
+</arguments>
+<msg timestamp="00000000 00:00:00.000" html="no" level="INFO">Passing</msg>
+<status status="PASS" endtime="20090105 13:12:03.608" starttime="20090105 13:11:50.108"></status>
+</kw>
+<status status="PASS" endtime="20090105 13:12:03.608" starttime="20090105 13:11:50.108"></status>
+</kw>
+<kw type="kw" name="User Keyword" timeout="">
+<doc></doc>
+<arguments>
+</arguments>
+<msg timestamp="00000000 00:00:00.000" html="no" level="FAIL">Failing</msg>
+<kw type="kw" name="Step 1" timeout="">
+<doc></doc>
+<arguments>
+</arguments>
+<msg timestamp="00000000 00:00:00.000" html="no" level="FAIL">Failing</msg>
+<status status="FAIL" endtime="20090105 13:12:03.608" starttime="20090105 13:11:59.217"></status>
+</kw>
+<kw type="kw" name="Step 2" timeout="">
+<doc></doc>
+<arguments>
+</arguments>
+<status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
+</kw>
+<status status="FAIL" endtime="20090105 13:12:03.608" starttime="20090105 13:11:30.015"></status>
+</kw>
+<tags>
+</tags>
 <status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000">Not Executed!</status>
 </test>
 <status status="FAIL" endtime="00000000 00:00:00.000" starttime="00000000 00:00:00.000"></status>
 </suite>
 <statistics>
 <total>
-<stat fail="2" pass="2">Critical Tests</stat>
-<stat fail="2" pass="2">All Tests</stat>
+<stat fail="3" pass="2">Critical Tests</stat>
+<stat fail="3" pass="2">All Tests</stat>
 </total>
 <tag>
 </tag>
 <suite>
-<stat fail="2" doc="Testcases" pass="2">Testcases</stat>
+<stat fail="3" doc="Testcases" pass="2">Testcases</stat>
 </suite>
 </statistics>
 </robot>

@@ -82,11 +82,18 @@ class TestSettingStatusAndMessage(unittest.TestCase):
     def test_suite_is_informed(self):
         self.suite.tests[2].set_all('PASS')
         self.suite.tests[3].set_all('PASS')
+        self.suite.tests[4].set_all('PASS')
         self.assertEqual(self.suite.status, 'PASS')
 
     def test_pass_all_with_keyword(self):
-        # TODO: Should be added when user keywords are supported
-        assert False
+        test = self.suite.tests[4]
+        test.set_all('FAIL', 'Test failure')
+        self._all_status_should_be(test, 'FAIL')
+        self.assertEquals(test.keywords[0].keywords[0].status, 'FAIL')
+        test.set_all('PASS', 'Test failure')
+        self._all_status_should_be(test, 'PASS')
+        self.assertEquals(test.keywords[0].status, 'PASS')
+        self.assertEquals(test.keywords[0].keywords[0].status, 'PASS')
 
     def test_change_test_status_to_fail(self):
         test = self.suite.tests[0]
@@ -121,6 +128,7 @@ class TestSettingStatusAndMessage(unittest.TestCase):
         self.suite.tests[2].update_status_and_message('PASS', '')
         self.assertEqual(self.suite.status, 'FAIL')
         self.suite.tests[3].update_status_and_message('PASS', '')
+        self.suite.tests[4].update_status_and_message('PASS', '')
         self.assertEqual(self.suite.status, 'PASS')
         self.suite.tests[1].update_status_and_message('FAIL', 'Failure')
         self.assertEqual(self.suite.status, 'FAIL')
@@ -181,11 +189,13 @@ class TestGetExecutionStatus(unittest.TestCase):
     def test_get_execution_status_passed_with_suite(self):
         self.suite.tests[2].set_all('PASS')
         self.suite.tests[3].set_all('PASS')
+        self.suite.tests[4].set_all('PASS')
         self.assertEqual(self.suite.get_execution_status(), 'PASS')
 
     def test_get_execution_status_with_suite_when_some_tests_not_visible(self):
         self.suite.tests[2].visible = False
         self.suite.tests[3].visible = False
+        self.suite.tests[4].visible = False
         self.assertEqual(self.suite.get_execution_status(), 'PASS')
         
 
