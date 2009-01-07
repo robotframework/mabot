@@ -13,4 +13,4 @@
 #  limitations under the License.
 
 
-version = "0.5 beta"
+version = "0.5"
