@@ -59,7 +59,7 @@ class IO:
         xml_suite, xml_error = self._load_xml_file(xml)
         testdata_suite, data_error = self._load_datasource(datasource)
         self._set_suite(testdata_suite, data_error, xml_suite, xml_error)
-        self.output = xml or 'output.xml'
+        self.output = xml or os.path.abspath('output.xml')
         return self.suite
         
     def _set_suite(self, testdata_suite, data_error, xml_suite, xml_error):
