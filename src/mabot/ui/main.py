@@ -307,6 +307,7 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
         self._create_tools_menu(menubar)
         self._create_help_menu(menubar)        
         self.root.config(menu=menubar) # display the menu
+        self._create_popup_menu()
 
     def _create_file_menu(self, menubar):
         filemenu = Menu(menubar, tearoff=0)
@@ -324,19 +325,27 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
 
     def _create_edit_menu(self, menubar):
         editmenu = Menu(menubar, tearoff=0)
-        editmenu.add_command(label="Cut   Ctrl-X", command=self._cut)
+        self._create_copy_paste(editmenu)
         self.root.bind("<Control-x>", lambda x: self._cut)
-        editmenu.add_command(label="Copy   Ctrl-C", command=self._copy)
         self.root.bind("<Control-c>", lambda x: self._copy)
-        editmenu.add_command(label="Paste  Ctrl+V", command=self._paste)
         self.root.bind("<Control-v>", lambda x: self._paste)
         menubar.add_cascade(label="Edit", menu=editmenu)
 
+    def _create_copy_paste(self, menu):
+        menu.add_command(label="Cut   Ctrl-X", command=self._cut)
+        menu.add_command(label="Copy   Ctrl-C", command=self._copy)
+        menu.add_command(label="Paste  Ctrl+V", command=self._paste)
+
+    def _create_popup_menu(self):
+        popup = Menu(self.root, tearoff=0)
+        self._create_copy_paste(popup)
+        self.root.bind("<Button-3>", lambda x: popup.tk_popup(x.x_root + 50, 
+                                                              x.y_root + 10, 0))        
     def _cut(self):
-        self.root.focus_get().event_generate('<<Cut>>')    
+        self.root.focus_get().event_generate('<<Cut>>')
 
     def _copy(self):
-        self.root.focus_get().event_generate('<<Copy>>')    
+        self.root.focus_get().event_generate('<<Copy>>')
     
     def _paste(self):
         self.root.focus_get().event_generate('<<Paste>>')
