@@ -18,3 +18,4 @@ import ui
 import editors
 import tree
 import mabot
+import progressbar

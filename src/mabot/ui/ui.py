@@ -167,3 +167,4 @@ class CommonFrame(Frame):
 
     def __init__(self, master, **cnf):
         Frame.__init__(self, master, background='white', **cnf)
+

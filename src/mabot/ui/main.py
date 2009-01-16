@@ -31,6 +31,7 @@ from mabot.version import version
 
 from editors import Editor
 from editors import SuiteEditor
+from progressbar import ProgressBar
 from ui import *
 
 
@@ -38,9 +39,10 @@ class Mabot:
     
     def __init__(self, datasource, options):
         self.root = Tk()
-        self.suite = None
         self._save_options(options)
         self.io = IO(tkMessageBox.askyesno)
+        self.suite = self.io.load_data(None)
+        self._create_ui()
         self._load_data_and_create_ui(datasource)
         self._ask_additional_tags()
         self.root.mainloop()
@@ -55,19 +57,19 @@ class Mabot:
 
     def _load_data_and_create_ui(self, datasource):
         try:
+            progress = ProgressBar(self.root, 'Loading...')
             self.suite = self.io.load_data(datasource)
+            progress.destroy()
         except IOError, error:
+            progress.destroy()
             self._show_error(error, 'Loading Failed!')
         except Exception, error:
+            progress.destroy()
             self._show_error(error, "Unexpected error while loading data!")
         else:
             self._create_ui()
 
     def _show_error(self, error, message):
-        # Creates empty UI before showing the error dialog.
-        if not self.suite:
-            self.suite = self.io.load_data(None)
-            self._create_ui()
         tkMessageBox.showerror(message, error[0])            
 
     def _create_ui(self):
@@ -91,7 +93,10 @@ class Mabot:
     def _create_root(self):
         self.root.destroy()
         self.root = Tk()
-        self.root.title('%s - Mabot' % (self.suite.name))
+        name = 'Mabot'
+        if self.suite.name:
+            name = '%s - %s' % (self.suite.name, name)
+        self.root.title(name)
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
         self.root.configure(background='white')
         width, height = self.root.maxsize()
@@ -258,7 +263,9 @@ class Mabot:
                 
     def _save(self, path=None):
         try:
+            progress = ProgressBar(self.root, 'Saving...')
             saved, changes = self.io.save_data(path)
+            progress.destroy()
             if changes:
                 self._init_tree_view()
                 self._update_visibility()
@@ -273,6 +280,7 @@ class Mabot:
                 else:
                     self._statusbar_right.configure(text='No changes to be saved')        
         except Exception, error:
+            progress.destroy()
             tkMessageBox.showerror('Saving Failed!', error[0])
                     
     def _save_as(self):

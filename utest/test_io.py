@@ -42,6 +42,7 @@ XML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'output.xml')
 HTML_DATASOURCE_WITH_XML = join(SUITES_FOLDER, 'testcases2.html')
 TEXT_DATASOURCE = join(SUITES_FOLDER, 'text.txt')
 NON_EXISTING_DATASOURCE = join(DATA_FOLDER, 'foo.html')
+NON_EXISTING_XML = join(DATA_FOLDER, 'foo.xml')
 DUPLICATE_USERKEYWORDS = join(DATA_FOLDER, 'duplicate_keywords.html')
 INVALID_HTML = join(DATA_FOLDER, 'invalid.html')
 INVALID_XML = join(DATA_FOLDER, 'invalid.xml')
@@ -136,6 +137,10 @@ class TestLoadData(_TestIO):
         msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
         self._test_error(NON_EXISTING_DATASOURCE, msg)
 
+    def test_load_data_with_non_existing_xml_datasource(self):
+        msg = "Path '%s' does not exist!" % (NON_EXISTING_XML)
+        self._test_error(NON_EXISTING_XML, msg)
+
     def test_load_data_with_non_existing_datasource_with_xml_loading_on(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True        
         msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
@@ -204,5 +209,104 @@ class TestGetDatasourceAndXml(_TestIO):
                          self.io._get_datasource_and_xml_from)
             
     
+class TestBackUp(_TestIO):
+
+    def setUp(self):
+        _TestIO.setUp(self)
+        self.remove_files = []
+        self.orig_get_timestamp = self.io._get_timestamp
+        self.io._get_timestamp = self._get_timestamp
+        io.SETTINGS["always_load_old_data_from_xml"] = True
+        
+        
+    def tearDown(self):
+        _TestIO.tearDown(self)
+        self.io._get_timestamp = self.orig_get_timestamp 
+        for path in self.remove_files:
+            if os.path.exists(path):
+                os.remove(path)
+
+    def test_backup_non_existing_xml(self):
+        self._test_creating_backup(NON_EXISTING_XML, False)
+
+    def test_backup_existing_xml(self):
+        self._test_creating_backup(XML_DATASOURCE_ONLY, True)
+
+    def test_backup_existing_xml_setting_always_load_off(self):
+        io.SETTINGS["always_load_old_data_from_xml"] = False
+        self._test_creating_backup(XML_DATASOURCE_ONLY, False)
+
+    def test_backup_existing_xml_backup_exists(self):
+        backup = self._get_backup(XML_DATASOURCE_ONLY)
+        self._write(backup, "NOT IN XML")
+        self.io._make_backup()
+        self.assertTrue(os.path.exists(backup))
+        self.assertTrue("NOT IN XML" not in self._read(backup))
+
+    def test_backup_existing_xml_backup_exists_and_is_processed(self):
+        backup = self._get_backup(XML_DATASOURCE_ONLY)
+        data = """<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20081204 10:49:05.015">NOT IN REAL XML
+</robot>"""
+        f = file(backup, 'w')
+        f.write(data)
+        self.io._make_backup()
+        f.close()
+        self.assertTrue(os.path.exists(backup))
+        self.assertTrue('NOT IN REAL XML' in self._read(backup))
+
+    def test_backup_invalid_xml_backup_exists(self):
+        io.SETTINGS["always_load_old_data_from_xml"] = True
+        backup = self._get_backup(INVALID_XML)
+        self._write(backup, 'NOT IN REAL XML')
+        self.assertRaises(IOError, self.io._make_backup)
+        self.assertTrue(os.path.exists(backup))
+        self.assertTrue(os.path.exists(self._get_timestamp_backup(INVALID_XML)))
+
+    def test_backup_invalid_xml_backup_does_not_exist(self):
+        self._test_creating_backup(INVALID_XML, False)
+        self.assertFalse(os.path.exists(self._get_timestamp_backup(INVALID_XML)))
+
+    def _test_creating_backup(self, path, backup_exists):
+        backup = self._get_backup(path)
+        self.io._make_backup()
+        msg = backup_exists and 'Backup should exist' or 'Backup should not exist'
+        self.assertEquals(os.path.exists(backup), backup_exists, msg)
+
+    def _get_backup(self, path):
+        backup = '%s.bak' % path
+        self.remove_files.append(backup)
+        self.io.output = path
+        return backup
+
+    def _get_timestamp_backup(self, path):
+        backup = '%s_%s.bak' % (path, self._get_timestamp())
+        self.remove_files.append(backup)
+        return backup
+
+    def _read(self, path):
+        f = open(path, 'r')
+        data = f.read()
+        f.close()
+        return data
+        
+    def _write(self, path, data):
+        f = open(path, 'w')
+        f.write(data)
+        f.close()
+
+    def _get_timestamp(self):
+        return '20090114092000'
+
+class TestGetTimeStamp(_TestIO):
+    
+    def test_get_timestamp(self):
+        timestamp = self.io._get_timestamp()
+        self.assertEquals(len(timestamp), 14)
+        try:
+            int(timestamp)
+        except ValueError:
+            raise AssertionError('Timestamp is not valid!')
+
 if __name__ == "__main__":
     unittest.main()

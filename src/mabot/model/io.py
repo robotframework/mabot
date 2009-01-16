@@ -14,6 +14,8 @@
 
 
 import os.path
+import shutil
+import time
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -131,20 +133,22 @@ class IO:
             self.output = output
         lock = utils.LockFile(self.output)
         lock.create_lock(self.ask_method)
-        changes = self._reload_data_from_xml()
-        saved = False
-        if DATA_MODIFIED.is_modified() or output:
-            self._save_data()
-            saved = True
-        lock.release_lock()
-        return saved, changes
+        try:
+            self._make_backup()
+            changes = self._reload_data_from_xml()
+            if DATA_MODIFIED.is_modified() or output:
+                self._save_data()
+                return True, changes
+            return False, changes
+        finally:
+            lock.release_lock()
 
     def _reload_data_from_xml(self):
         if SETTINGS["always_load_old_data_from_xml"] and \
             SETTINGS["check_simultaneous_save"] and \
             os.path.exists(self.output) and \
             self.xml_generated != self._get_xml_generation_time():
-            xml_suite = self._read_xml()
+            xml_suite = ManualSuite(XmlTestSuite(self.output), None, True)                
             if xml_suite:
                 self.suite.add_results(xml_suite, True, self.ask_method)
                 return True
@@ -152,28 +156,47 @@ class IO:
 
     def _save_data(self):
         self.suite.save()
+        self._make_backup()
         testoutput = RobotTestOutput(self.suite, utils.LOGGER)
-        testoutput.serialize_output(self.output, self.suite)
+        testoutput.serialize_output(self.output, self.suite)            
         self.suite.saved()
         DATA_MODIFIED.saved()
         self.xml_generated = self._get_xml_generation_time()
     
+    def _make_backup(self):
+        if os.path.exists(self.output) and \
+        SETTINGS["always_load_old_data_from_xml"]:
+            # Creates backup only if the XML is valid 
+            # Makes sure, that valid backup is not overridden
+            backup = '%s.bak' % self.output 
+            try:
+                # Validates XML
+                self._get_xml_generation_time()
+            except:
+                if os.path.exists(backup):
+                    time_backup = '%s_%s.bak' % (self.output, self._get_timestamp())
+                    shutil.copyfile(backup, time_backup)
+                    msg = '''
+%s is not a valid XML file!
+Timestamped backup file was generated automatically
+to file %s.
+
+Try to save again. If the problem exists, copy latest
+valid backup over the invalid XML without closing Mabot.
+Note that some results will most probably be lost.
+''' % (self.output, time_backup)
+                    raise IOError(msg)
+            else:
+                shutil.copyfile(self.output, self.output+'.bak')
+    
+    def _get_timestamp(self):
+        return '%d%02d%02d%02d%02d%02d' % time.localtime()[:6]
+    
     def _get_xml_generation_time(self, path=None):
         if path is None:
             path = self.output 
-        return ET.ElementTree(file=path).getroot().get("generated")
-    
-    def _read_xml(self):
-        while True:
-            try:
-                return ManualSuite(XmlTestSuite(self.output), None, True)                
-            except Exception, error:
-                message = """Loading file '%s' failed!
-Error was: %s
+        try:
+            return ET.ElementTree(file=path).getroot().get("generated")
+        except:
+            raise IOError('%s is not a valid XML file!' % self.output)
 
-Do you want to try to load the file again?
-""" % (self.path, error[0])
-                if not self.ask_method("Loading Failed!", message):
-                    return None
-
-        

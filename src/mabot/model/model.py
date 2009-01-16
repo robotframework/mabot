@@ -198,6 +198,10 @@ class AbstractManualModel:
     def is_keyword(self):
         return isinstance(self, ManualKeyword)
 
+    def _get_keyword(self, kw, from_xml):
+        if kw:
+            return ManualKeyword(kw, self, from_xml)
+        return None
 
 class AbstractManualTestOrKeyword(AbstractManualModel):
 
@@ -220,7 +224,23 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
             return False
         elif not self.is_modified:
             return True
+        elif self == other:
+            return False
         return override_method(*self._create_message_for_duplicate_results(other))
+
+    def _get_message_for_different_attrs(self, other):
+        s_diffs = ''
+        o_diffs = ''
+        for attr in self.compare_attrs:
+            s_value = getattr(self, attr)
+            o_value = getattr(other, attr)
+            if type(s_value) is list and type(o_value) is list:
+                s_value = ', '.join(s_value)
+                o_value = ', '.join(o_value)
+            if s_value !=  o_value:
+                s_diffs += '%s: %s\n' % (attr.capitalize(), s_value)
+                o_diffs += '%s: %s\n' % (attr.capitalize(), o_value)
+        return s_diffs, o_diffs        
 
     def _saved_after_loading(self, other):
         elapsed = utils.get_elapsed_time(self.endtime, other.endtime)
@@ -233,13 +253,18 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
         self.message = other.message
         self.is_modified = False
 
+    def __cmp__(self, other):
+        for attr in self.compare_attrs:
+            diffs = cmp(getattr(self, attr), getattr(other, attr))
+            if diffs != 0:
+                return diffs
+        return 0
 
 class ManualSuite(RunnableTestSuite, AbstractManualModel):
     
     def __init__(self, suite, parent=None, from_xml=False):
         if not from_xml:
             KW_LIB.add_suite_keywords(suite)
-        if not from_xml:
             suite = self._init_data(suite)
         AbstractManualModel.__init__(self, suite, parent)
         self.mediumname = suite.mediumname
@@ -249,8 +274,8 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
         self.filtered = suite.filtered
         self.critical_stats = suite.critical_stats
         self.all_stats = suite.all_stats
-        self.setup = suite.setup
-        self.teardown = suite.teardown
+        self.setup = self._get_keyword(suite.setup, from_xml)
+        self.teardown = self._get_keyword(suite.teardown, from_xml)
         self.suites = [ManualSuite(sub_suite, self, from_xml) for sub_suite in suite.suites]
         self.tests = [ManualTest(test, self, from_xml) for test in suite.tests]
         self._update_status()
@@ -398,12 +423,13 @@ class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
             self.message = self._get_default_message()
         self.mediumname = test.mediumname
         self.longname = test.longname
-        self.setup = test.setup
-        self.teardown = test.teardown
+        self.setup = self._get_keyword(test.setup, from_xml)
+        self.teardown = self._get_keyword(test.teardown, from_xml)
         self.tags = test.tags
         self.keywords = [ ManualKeyword(kw, self, from_xml) for kw in test.keywords ]
         self.critical = test.critical
         self.timeout = test.timeout
+        self.compare_attrs = ['status', 'message', 'tags']
 
     def _mark_data_modified(self, executed=True):
         AbstractManualModel._mark_data_modified(self)
@@ -439,7 +465,7 @@ class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
             msg = 'Could not check correct model from data source!\n%s'
             tkMessageBox('Loading Data Source Failed', msg % (error))
             return
-        if test._has_same_keywords(self):
+        if not test or test._has_same_keywords(self):
             return
         if test._has_same_keywords(other):
             test = other
@@ -463,21 +489,14 @@ class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
             kw.parent = self
 
     def _create_message_for_duplicate_results(self, other):
+        s_diffs, o_diffs = self._get_message_for_different_attrs(other)
         message = """Test '%s' updated by someone else!
 Your test information:
-Status: %s
-Message: %s
-Tags: %s
-
+%s
 Other test information:
-Status: %s
-Message: %s
-Tags: %s
-
+%s
 Do you want your changes to be overridden?"""
-        message = message % (self.longname, self.status, self.message, 
-                             ', '.join(self.tags), other.status, 
-                             other.message, ', '.join(other.tags))
+        message = message % (self.longname, s_diffs, o_diffs)
         return "Conflicting Test Results!", message
     
 
@@ -526,7 +545,6 @@ Do you want your changes to be overridden?"""
             self.visible = False
         return self.visible
 
-
 class ManualKeyword (AbstractManualTestOrKeyword):
 
     def __init__(self, kw, parent, from_xml):
@@ -552,6 +570,7 @@ class ManualKeyword (AbstractManualTestOrKeyword):
         self.args = kw.args
         self.type = kw.type
         self.timeout = kw.timeout
+        self.compare_attrs = ['status', 'message']
 
     def add_results(self, other, add_from_xml, override_method):
         if self._load_other(other, override_method):
@@ -583,18 +602,17 @@ class ManualKeyword (AbstractManualTestOrKeyword):
         serializer.end_keyword(self)
 
     def _create_message_for_duplicate_results(self, other):
+        self_diffs, other_diffs = self._get_message_for_different_attrs(other)
         message = """Keyword '%s' updated by someone else in test case '%s'!
 Your keyword information:
-Status: %s
-Message: %s
+%s
 
 Other keyword information:
-Status: %s
-Message: %s
+%s
 
 Do you want your changes to be overridden?"""
         message = message % (self.name, self.get_parent_testcase().longname, 
-                             self.status, self.message, other.status, other.message)
+                             self_diffs, other_diffs)
         return "Conflicting Keyword Results!", message
 
 

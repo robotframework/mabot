@@ -14,14 +14,15 @@
 
 from copy import deepcopy
 from os.path import dirname, join, normcase
-from unittest import TestCase
+
+import unittest
 
 from robot.common.model import BaseTestSuite, BaseTestCase
 
 from mabot.model.io import IO
 from mabot.model import model 
 
-class _TestAddingData(TestCase):
+class _TestAddingData(unittest.TestCase):
 
     def setUp(self):
         data = normcase(join(dirname(__file__), 'data', 'root_suite'))
@@ -327,6 +328,10 @@ class TestHasSameKeywords(_TestAddingData):
         self.assertFalse(self.test._has_same_keywords(self.other_test))
 
 class TestLoadOther(_TestAddingData):
+
+    def setUp(self):
+        _TestAddingData.setUp(self)
+        self.mock = MockDialog()
     
     def test_load_other_when_starting_eq_no_override_method(self):
         self.assertTrue(self.test._load_other(self.other_test, None))
@@ -335,22 +340,23 @@ class TestLoadOther(_TestAddingData):
         self.assertFalse(self.test._load_other(self.other_test, True))
 
     def test_load_other_when_other_has_modifications(self):
-        self.is_modified = False
+        self.test.is_modified = False
         self.other_test.endtime = '2008010101 10:10:10'
         self.assertTrue(self.test._load_other(self.other_test, True))
 
-    def test_load_other_when_both_have_modifications(self):
+    def _modify_both_items(self):
         self.test.is_modified = True
-
         self.other_test.status = 'PASS'
         self.other_test.message = 'working'
         self.other_test.tags = ['tag-1', 'tag-2']
         self.other_test.endtime = '2008010101 10:10:10'
-        mock = MockDialog()
-        mock.return_ = True
-        self.assertTrue(self.test._load_other(self.other_test, mock.call))
-        mock.return_ = False
-        self.assertFalse(self.test._load_other(self.other_test, mock.call))
+
+    def test_load_other_when_both_have_modifications(self):
+        self._modify_both_items()
+        self.mock.return_ = True
+        self.assertTrue(self.test._load_other(self.other_test, self.mock.call))
+        self.mock.return_ = False
+        self.assertFalse(self.test._load_other(self.other_test, self.mock.call))
         expected = """Test 'Root Suite.Sub Suite2.TC With Keywords' updated by someone else!
 Your test information:
 Status: FAIL
@@ -363,21 +369,58 @@ Message: working
 Tags: tag-1, tag-2
 
 Do you want your changes to be overridden?"""
-        self.assertEqual(mock.messages[0], 
+        self.assertEqual(self.mock.messages[0], 
                          ("Conflicting Test Results!", expected))
 
-    def test_load_other_with_keywords(self):
-        kw = self.test.keywords[0]
-        other_kw = self.other_test.keywords[0]
-        kw.is_modified = True
-        other_kw.status = 'PASS'
-        other_kw.message = 'working'
-        other_kw.endtime = '2008010101 10:10:10'
-        mock = MockDialog()
-        self.assertTrue(kw._load_other(other_kw, mock.call))
-        self.assertEqual(mock.messages[0], 
-                         kw._create_message_for_duplicate_results(other_kw))
+    def test_load_other_when_both_have_modifications_status_is_different(self):
+        self._modify_both_items()
+        self.test.message = self.other_test.message
+        self.mock.return_ = True
+        self.assertTrue(self.test._load_other(self.other_test, self.mock.call))
+        self.assertFalse(self.test.message in self.mock.messages[0][1])
+        self.assertTrue(self.test.status in self.mock.messages[0][1])
+        self.assertTrue(self.other_test.status in self.mock.messages[0][1])
 
+    def test_load_other_when_both_have_modifications_no_differences(self):
+        self.test.is_modified = True
+        self.other_test.endtime = '2008010101 10:10:10'
+        self.mock.return_ = True
+        self.assertFalse(self.test._load_other(self.other_test, self.mock.call),
+                         'Message, status and tags are same, should not update items')
+        self.assertEqual(len(self.mock.messages), 0)
+
+
+class TestLoadOtherWithKeywords(_TestAddingData):
+    
+    def setUp(self):
+        _TestAddingData.setUp(self)
+        self.kw = self.test.keywords[0]
+        self.other_kw = self.other_test.keywords[0]
+        self.kw.is_modified = True
+        self.other_kw.status = 'PASS'
+        self.other_kw.message = 'working'
+        self.other_kw.endtime = '2008010101 10:10:10'
+        self.mock = MockDialog()
+
+    def test_load_other_with_keywords(self):
+        self.assertTrue(self.kw._load_other(self.other_kw, self.mock.call))
+        self.assertEqual(self.mock.messages[0], 
+                         self.kw._create_message_for_duplicate_results(self.other_kw))        
+        self.assertTrue('Status: PASS\n' in self.mock.messages[0][1])
+        self.assertTrue('Message: working\n' in self.mock.messages[0][1])
+
+    def test_load_other_with_keywords_only_message_different(self):
+        self.other_kw.status = self.kw.status
+        self.assertTrue(self.kw._load_other(self.other_kw, self.mock.call))
+        self.assertTrue('Status: %s\n' % (self.kw.status) not in self.mock.messages[0][1])
+        self.assertTrue('Message: working\n' in self.mock.messages[0][1])
+
+    def test_load_other_with_keywords_having_same_data(self):
+        self.other_kw.status = self.kw.status
+        self.other_kw.message = self.kw.message
+        self.assertFalse(self.kw._load_other(self.other_kw, self.mock.call),
+                         'Message and status are same, should not update items')
+        self.assertEqual(len(self.mock.messages), 0)
 
 class MockDialog:
     
