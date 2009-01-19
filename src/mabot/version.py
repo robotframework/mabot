@@ -12,5 +12,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import time
 
-version = "0.5"
+version = "trunk-%d%02d%02d" % (time.localtime()[:3])
