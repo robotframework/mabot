@@ -566,7 +566,7 @@ class ManualKeyword (AbstractManualTestOrKeyword):
             self.messages = []
             self.message = ""
             self.msg_timestamp = self.msg_level = None 
-            self.keywords = [ ManualKeyword(kw, self, False) for kw in KW_LIB.get_keywords(self.name, self) ]
+            self.keywords = [ ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self) ]
         self.args = kw.args
         self.type = kw.type
         self.timeout = kw.timeout
