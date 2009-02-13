@@ -46,7 +46,7 @@ class Node(TreeWidget.TreeNode):
 
     def drawtext(self):
         self.label.update_foreground(get_status_color(self.item.model_item))
-        TreeWidget.TreeNode.drawtext(self)        
+        TreeWidget.TreeNode.drawtext(self)            
 
 
 class ForeGroundLabel(Label):
@@ -67,9 +67,9 @@ class _RobotTreeItem(TreeWidget.TreeItem):
     
     def __init__(self, item):
         self.model_item = item
-        self.label = self.model_item.name
         self.children = self._get_children()
-    
+        self.label = self._get_label()
+
     def GetText(self):
         return self.label
     
@@ -83,6 +83,9 @@ class _RobotTreeItem(TreeWidget.TreeItem):
 class SuiteTreeItem(_RobotTreeItem):
             
     def _get_children(self):
+        if self._only_one_visible_folder_suite_child(self.model_item):
+            visible_suite = [s for s in self.model_item.suites if s.visible ][0]
+            return SuiteTreeItem(visible_suite)._get_children()
         children = []
         for suite in self.model_item.suites:
             if suite.visible:
@@ -93,24 +96,42 @@ class SuiteTreeItem(_RobotTreeItem):
         return children
     
     def GetIconName(self):
-        if len(self.model_item.tests) == 0:
-            return 'dir_suite'
-        return 'file_suite'
+        if self.model_item.tests:
+            return 'file_suite'
+        return 'dir_suite'
 
-   
-class TestTreeItem(_RobotTreeItem):
+    def _only_one_visible_folder_suite_child(self, item):
+        return len([s for s in item.suites if s.visible ]) == 1 \
+               and not item.suites[0].tests
 
-    def _get_children(self):
+    def _get_label(self):
+        names = []
+        self._get_suite_names_with_one_suite_child(self.model_item, names)
+        return '/'.join(names)
+
+    def _get_suite_names_with_one_suite_child(self, item, names):
+        names.append(item.name)
+        if self._only_one_visible_folder_suite_child(item):
+            return self._get_suite_names_with_one_suite_child(item.suites[0], names)
+        return names
+
+
+class _AbstractTestAndKWItem(_RobotTreeItem):
+        
+    def _get_label(self):
+        return self.model_item.name
+
+    def _get_children(self): 
         return [ KeywordTreeItem(kw) for kw in self.model_item.keywords ]
+
+
+class TestTreeItem(_AbstractTestAndKWItem):
 
     def GetIconName(self):
         return 'test'
+    
 
-    
-class KeywordTreeItem(_RobotTreeItem):
-    
-    def _get_children(self): 
-        return [ KeywordTreeItem(kw) for kw in self.model_item.keywords ]
-    
+class KeywordTreeItem(_AbstractTestAndKWItem):
+        
     def GetIconName(self):
         return 'keyword'
