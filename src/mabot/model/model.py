@@ -395,7 +395,7 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             suite.saved()
             
     def get_all_visible_tags(self, tags=None):
-        if not tags:
+        if tags is None:
             tags = []
         if self.visible:
             for item in self._get_items():

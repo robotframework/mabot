@@ -422,6 +422,64 @@ class TestLoadOtherWithKeywords(_TestAddingData):
                          'Message and status are same, should not update items')
         self.assertEqual(len(self.mock.messages), 0)
 
+class TestGettingTags(unittest.TestCase):
+
+    def setUp(self):
+        data = normcase(join(dirname(__file__), 'data', 'root_suite'))
+        self.suite = IO(lambda x: x).load_data(data)
+    
+    def test_getting_tags_from_test_with_tags_and_tags_empty(self):
+        test = self.suite.suites[0].tests[0]
+        tags = []
+        test.get_all_visible_tags(tags)
+        self.assertEquals(['tag-1', 'tag-2', 'tag-3'], tags)
+
+    def test_getting_tags_from_test_with_tags_and_some_tags(self):
+        test = self.suite.suites[0].tests[0]
+        tags = ['some', 'tag-2']
+        test.get_all_visible_tags(tags)
+        self.assertEquals(['some', 'tag-2', 'tag-1', 'tag-3'], tags)
+
+    def test_getting_tags_from_test_without_tags_and_tags_empty(self):
+        test = self.suite.suites[1].tests[0]
+        tags = []
+        test.get_all_visible_tags(tags)
+        self.assertEquals([], tags)
+
+    def test_getting_tags_from_test_without_tags_and_some_tags(self):
+        test = self.suite.suites[1].tests[0]
+        tags = ['some', 'tag-2']
+        test.get_all_visible_tags(tags)
+        self.assertEquals(['some', 'tag-2'], tags)
+
+    def test_getting_tags_from_file_suite_with_tags_and_tags_empty(self):
+        suite = self.suite.suites[0]
+        tags = []
+        suite.get_all_visible_tags(tags)
+        self.assertEquals(['tag-1', 'tag-2', 'tag-3'], tags)
+
+    def test_getting_tags_from_file_suite_with_tags_and_some_tags(self):
+        suite = self.suite.suites[0]
+        tags = ['some', 'tag-2']
+        suite.get_all_visible_tags(tags)
+        self.assertEquals(['some', 'tag-2', 'tag-1', 'tag-3'], tags)
+
+    def test_getting_tags_from_file_suite_without_tags_and_tags_empty(self):
+        suite = self.suite.suites[1]
+        tags = []
+        suite.get_all_visible_tags(tags)
+        self.assertEquals([], tags)
+
+    def test_getting_tags_from_file_suite_without_tags_and_some_tags(self):
+        suite = self.suite.suites[1]
+        tags = ['some', 'tag-2']
+        suite.get_all_visible_tags(tags)
+        self.assertEquals(['some', 'tag-2'], tags)
+
+    def test_getting_tags_from_directory_suite(self):
+        tags = self.suite.get_all_visible_tags()
+        self.assertEquals(['tag-1', 'tag-2', 'tag-3'], tags)
+
 class MockDialog:
     
     def __init__(self):
