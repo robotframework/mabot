@@ -17,18 +17,13 @@
 import sys
 from os.path import dirname, normpath, abspath
 
-def normalize(path):
-    return normpath(abspath(path))
-
 # Removes the path where this script is from sys.path allowing import of mabot
-script_path = normalize(dirname(__file__))
-for path in [ path for path in sys.path if normalize(path) == script_path ]:
-    sys.path.remove(path)
+script_path = normpath(abspath(dirname(__file__)))
+for path in sys.path:
+    if normpath(abspath(path)) == script_path:
+        sys.path.remove(path)
+from mabot import run
 
-try:
-    from mabot import run
-except ImportError, e:
-    print "Could not find Mabot. Try to (re)install it."
-    sys.exit(1)
 
-run(sys.argv[1:])
+if __name__ == '__main__':
+    run(sys.argv[1:])
