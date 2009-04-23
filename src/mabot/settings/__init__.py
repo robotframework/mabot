@@ -13,11 +13,20 @@
 #  limitations under the License.
 
 
+import os
 import os.path
 from types import ListType
 from types import StringType
 
-USER_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), 'settings.py')
+if os.sep == '\\':
+    USER_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), 'settings.py')
+else:
+    MABOT_DIRECTORY = os.path.join(os.path.expanduser('~'), '.robotframework-mabot')
+    if not os.path.exists(MABOT_DIRECTORY):
+        os.makedirs(MABOT_DIRECTORY)
+    USER_SETTINGS_FILE = os.path.join(MABOT_DIRECTORY, 'settings.py')
+    import sys
+    sys.path.append(MABOT_DIRECTORY)
 COMPILED_USER_SETTINGS_FILE = USER_SETTINGS_FILE + 'c'
 
 class Settings:
@@ -70,14 +79,14 @@ class Settings:
             from projectsettings import project_settings
             for key in project_settings.keys():
                 self.settings[key] = project_settings[key]
-        except:
+        except (ImportError, KeyError):
             pass
         try:
             import settings
             reload(settings)
             for key in settings.settings.keys():
                 self.settings[key] = settings.settings[key]
-        except:
+        except (ImportError, KeyError):
             pass
         
     def restore_settings(self):
