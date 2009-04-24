@@ -19,6 +19,8 @@ import unittest
 from os.path import abspath, dirname, join, normcase
 
 from robot.utils.asserts import *
+from robot.version import get_version
+ROBOT_VERSION = get_version()
 
 from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
@@ -153,14 +155,21 @@ class TestLoadData(_TestIO):
         self._test_error(HTML_DATASOURCE_WITH_XML, msg)
 
     def test_load_data_with_valid_datasource_and_invalid_xml(self):
-        io.SETTINGS["always_load_old_data_from_xml"] = True      
-        msg = "File '%s' is not a valid XML file.\n" % (VALID_HTML_INVALID_XML_XML)
+        io.SETTINGS["always_load_old_data_from_xml"] = True
+        msg =  self._get_invalid_xml_message(VALID_HTML_INVALID_XML_XML)
         self._test_error(VALID_HTML_INVALID_XML_DATASOURCE, msg)
+
+    def _get_invalid_xml_message(self, path):
+        if ROBOT_VERSION < '2.1':
+            msg = "File '%s' is not a valid XML file.\n"
+        else:
+            msg = "Opening XML file '%s' failed: SyntaxError: no element found: line 1, column 0\n"
+        return msg % (path)
 
     def test_load_data_with_xml_error_and_datasource_error(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True      
         msg = "Test case file '%s' contains no test cases. and\n" % (INVALID_HTML)
-        msg += "File '%s' is not a valid XML file.\n" % (INVALID_XML)
+        msg += self._get_invalid_xml_message(INVALID_XML)
         self._test_error(INVALID_HTML, msg)
 
 

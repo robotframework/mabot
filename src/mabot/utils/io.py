@@ -13,15 +13,7 @@
 #  limitations under the License.
 
 
-try:
-    from robot.running import TestSuite
-    from robot.conf import RobotSettings
-except ImportError, error:
-    print """All needed Robot modules could not be imported. 
-Check your Robot installation."""
-    print "Error was: %s" % (error[0])
-    sys.exit(1)
-
+from robotapi import TestSuite, RobotSettings
 import logger
 
 

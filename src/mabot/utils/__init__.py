@@ -13,8 +13,6 @@
 #  limitations under the License.
 
 
-from robot.utils import *
-
 from logger import LOGGER
 from io import load_data
 from lock import LockFile

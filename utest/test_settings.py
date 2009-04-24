@@ -47,13 +47,13 @@ class TestSettings(unittest.TestCase):
         
     def test_saving_with_default_settings(self):
         self.settings.save_settings()
-        from mabot.settings import settings
+        settings = self._import_settings()
         reload(settings)
         self.assertEquals(self.settings.settings, settings.settings)
 
     def test_saving_with_modified_settings(self):
         self.settings.save_settings()
-        from mabot.settings import settings
+        settings = self._import_settings()
         reload(settings)
         self.assertEquals(self.settings.settings, settings.settings)
         self.settings.settings["default_message"] = "My message"
@@ -75,6 +75,13 @@ class TestSettings(unittest.TestCase):
         self.settings.restore_settings()
         self.assertEquals(self.settings.settings, defaults)
         self.assertFalse(os.path.exists(USER_SETTINGS_FILE))
+
+    def _import_settings(self):
+        if os.sep == '\\':
+            from mabot.settings import settings
+        else:
+            import settings
+            return settings
 
         
 if __name__ == "__main__":

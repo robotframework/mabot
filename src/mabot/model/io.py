@@ -29,21 +29,13 @@ except ImportError:
                               'Upgrade to Python 2.5+ or install ElementTree '
                               'from http://effbot.org/zone/element-index.htm')
 
-try:
-    from robot.running import TestSuite
-    from robot.output import TestSuite as XmlTestSuite
-    from robot.conf import RobotSettings
-    from robot.serializing.testoutput import RobotTestOutput
-except ImportError, error:
-    print """All needed Robot modules could not be imported. 
-Check your Robot installation."""
-    print "Error was: %s" % (error[0])
-
 from model import EmptySuite
 from model import ManualSuite
 from model import DATA_MODIFIED
 from mabot.settings import SETTINGS
 from mabot import utils
+from mabot.utils import robotapi
+
 
 class IO:
     
@@ -87,7 +79,7 @@ class IO:
     def _load_xml_file(self, xml):
         if xml and os.path.exists(xml):
             try:
-                suite = ManualSuite(XmlTestSuite(xml), None, True)
+                suite = ManualSuite(robotapi.XmlTestSuite(xml), None, True)
                 self.xml_generated = self._get_xml_generation_time(xml)
                 return suite, None
             except Exception, error:
@@ -148,7 +140,7 @@ class IO:
             SETTINGS["check_simultaneous_save"] and \
             os.path.exists(self.output) and \
             self.xml_generated != self._get_xml_generation_time():
-            xml_suite = ManualSuite(XmlTestSuite(self.output), None, True)                
+            xml_suite = ManualSuite(robotapi.XmlTestSuite(self.output), None, True)                
             if xml_suite:
                 self.suite.add_results(xml_suite, True, self.ask_method)
                 return True
@@ -157,7 +149,8 @@ class IO:
     def _save_data(self):
         self.suite.save()
         self._make_backup()
-        testoutput = RobotTestOutput(self.suite, utils.LOGGER)
+        #TODO: Change how execution errors are given
+        testoutput = robotapi.RobotTestOutput(self.suite, utils.LOGGER)
         testoutput.serialize_output(self.output, self.suite)            
         self.suite.saved()
         DATA_MODIFIED.saved()

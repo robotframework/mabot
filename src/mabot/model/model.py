@@ -17,19 +17,10 @@ import os.path
 import sys
 import tkMessageBox
 
-try:
-    from robot.common import UserErrorHandler
-    from robot.running.model import RunnableTestSuite, RunnableTestCase
-    from robot.output.readers import Message
-    from robot.running.namespace import Namespace
-except ImportError, error:
-    print """All needed Robot modules could not be imported. 
-Check your Robot installation."""
-    print "Error was: %s" % (error[0])
-    sys.exit(1)
-
 from mabot.settings import SETTINGS
 from mabot import utils
+from mabot.utils import robotapi
+
 
 class Modified:
     
@@ -94,7 +85,7 @@ class UserKeywordLibrary:
         if not self.keywords.has_key(name):
             return []
         kw = self.keywords[name]
-        if isinstance(kw, UserErrorHandler):
+        if isinstance(kw, robotapi.UserErrorHandler):
             msg = "Could not create keyword '%s' in testcase '%s'.\n%s"
             msg = msg % (kw.name, item.get_parent_testcase().longname, kw._error)
             raise Exception(msg)
@@ -153,7 +144,7 @@ class AbstractManualModel:
         DATA_MODIFIED.modified()
         self.is_modified = True
         if update_starttime:
-            self.starttime = utils.get_timestamp()
+            self.starttime = robotapi.get_timestamp()
         
     def _update_parent(self):
         if self.parent is not None:
@@ -243,7 +234,7 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
         return s_diffs, o_diffs        
 
     def _saved_after_loading(self, other):
-        elapsed = utils.get_elapsed_time(self.endtime, other.endtime)
+        elapsed = robotapi.get_elapsed_time(self.endtime, other.endtime)
         return elapsed != '00:00:00.000'
 
     def _add_info_from_other(self, other):
@@ -260,18 +251,16 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
                 return diffs
         return 0
 
-class ManualSuite(RunnableTestSuite, AbstractManualModel):
+class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
     
     def __init__(self, suite, parent=None, from_xml=False):
         if not from_xml:
             KW_LIB.add_suite_keywords(suite)
             suite = self._init_data(suite)
         AbstractManualModel.__init__(self, suite, parent)
-        self.mediumname = suite.mediumname
         self.longname = suite.longname
         self.metadata = suite.metadata
         self.critical = suite.critical
-        self.filtered = suite.filtered
         self.critical_stats = suite.critical_stats
         self.all_stats = suite.all_stats
         self.setup = self._get_keyword(suite.setup, from_xml)
@@ -297,16 +286,16 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
 
     def _update_status(self):
         self.message = ''
-        RunnableTestSuite.set_status(self) # From robot.common.model.BaseTestSuite
+        robotapi.RunnableTestSuite.set_status(self) # From robot.common.model.BaseTestSuite
 
     def _add_test_to_stats(self, test):
         #Overrides the method from robot model. Takes the visibility into account.
         if not test.visible and not self.saving:
             return
-        RunnableTestSuite._add_test_to_stats(self, test)
+        robotapi.RunnableTestSuite._add_test_to_stats(self, test)
 
     def _init_data(self, suite):
-        varz = Namespace(suite, None, utils.LOGGER).variables
+        varz = robotapi.Namespace(suite, None, utils.LOGGER).variables
         suite._init_suite(varz)
         for test in suite.tests:
             test._init_test(varz)
@@ -381,7 +370,7 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             item.update_default_message(old_default, new_default)
         
     def save(self):
-        self._save(utils.get_timestamp())
+        self._save(robotapi.get_timestamp())
         
     def _save(self, time):
         self.saving = True
@@ -411,7 +400,7 @@ class ManualSuite(RunnableTestSuite, AbstractManualModel):
             self.visible = True
         return self.visible
 
-class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
+class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
 
     def __init__(self, test, parent, from_xml=False):
         AbstractManualModel.__init__(self, test, parent)
@@ -421,7 +410,6 @@ class ManualTest(RunnableTestCase, AbstractManualTestOrKeyword):
             self.message = test.message or ""
         else:
             self.message = self._get_default_message()
-        self.mediumname = test.mediumname
         self.longname = test.longname
         self.setup = self._get_keyword(test.setup, from_xml)
         self.teardown = self._get_keyword(test.teardown, from_xml)
@@ -511,7 +499,8 @@ Do you want your changes to be overridden?"""
     def add_tag(self, tag, mark_modified=True):
         if not self.visible:
             return
-        tag = utils.normalize(tag)
+#        TODO: Change to support not normalized tags
+        tag = robotapi.normalize(tag)
         if not tag in self.tags:
             self.tags.append(tag)
             self.tags.sort()
@@ -521,7 +510,8 @@ Do you want your changes to be overridden?"""
     def remove_tag(self, tag):
         if not self.visible:
             return
-        tag = utils.normalize(tag)
+#        TODO: Change to support not normalized tags
+        tag = robotapi.normalize(tag)
         if tag in self.tags:
             self.tags.remove(tag)
             self._mark_data_modified(False)
@@ -616,7 +606,7 @@ Do you want your changes to be overridden?"""
         return "Conflicting Keyword Results!", message
 
 
-class ManualMessage(Message):
+class ManualMessage(robotapi.Message):
     
     def __init__(self, message, status, timestamp=None, level=None):
         self.timestamp = timestamp or '00000000 00:00:00.000'
@@ -633,12 +623,13 @@ def get_includes_and_excludes_from_pattern(pattern):
     ands = []
     nots = []
     if 'NOT' in pattern:
-        parts = [ utils.normalize(tag) for tag in pattern.split('NOT') ]
+#        TODO: Change to support not normalized tags
+        parts = [ robotapi.normalize(tag) for tag in pattern.split('NOT') ]
         if '' not in parts:
             ands = [parts[0]]
             nots = parts[1:]
         else:
             nots = ['*']
     else:
-        ands = [ utils.normalize(pattern) ]
+        ands = [ robotapi.normalize(pattern) ]
     return ands, nots
