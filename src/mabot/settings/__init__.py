@@ -15,19 +15,16 @@
 
 import os
 import os.path
+import sys
 from types import ListType
 from types import StringType
 
-if os.sep == '\\':
-    USER_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), 'settings.py')
-else:
-    MABOT_DIRECTORY = os.path.join(os.path.expanduser('~'), '.robotframework-mabot')
-    if not os.path.exists(MABOT_DIRECTORY):
-        os.makedirs(MABOT_DIRECTORY)
-    USER_SETTINGS_FILE = os.path.join(MABOT_DIRECTORY, 'settings.py')
-    import sys
-    sys.path.append(MABOT_DIRECTORY)
+from utils import get_settings_file
+
+USER_SETTINGS_FILE = get_settings_file('mabotsettings.py')
 COMPILED_USER_SETTINGS_FILE = USER_SETTINGS_FILE + 'c'
+sys.path.append(os.path.dirname(USER_SETTINGS_FILE))
+
 
 class Settings:
     
