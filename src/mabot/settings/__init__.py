@@ -21,7 +21,7 @@ from types import StringType
 
 from utils import get_settings_file
 
-USER_SETTINGS_FILE = get_settings_file('mabotsettings.py')
+USER_SETTINGS_FILE = get_settings_path('mabotsettings.py')
 COMPILED_USER_SETTINGS_FILE = USER_SETTINGS_FILE + 'c'
 sys.path.append(os.path.dirname(USER_SETTINGS_FILE))
 
@@ -79,10 +79,10 @@ class Settings:
         except (ImportError, KeyError):
             pass
         try:
-            import settings
-            reload(settings)
-            for key in settings.settings.keys():
-                self.settings[key] = settings.settings[key]
+            import mabotsettings
+            reload(mabotsettings)
+            for key in mabotsettings.settings.keys():
+                self.settings[key] = mabotsettings.settings[key]
         except (ImportError, KeyError):
             pass
         
