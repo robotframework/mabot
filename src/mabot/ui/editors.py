@@ -72,8 +72,9 @@ class AbstractEditor:
     def _create_title_and_data(self, master, title, data, **datacnf):
         row = CommonFrame(master)
         TitleLabel(row, title)
-        DataLabel(row, data, **datacnf)
+        label = DataLabel(row, data, **datacnf)
         row.pack(fill=BOTH, expand=1, anchor=N+W)
+        return label
         
     def _create_message(self, master):
         row = CommonFrame(master)
@@ -94,17 +95,24 @@ class AbstractEditor:
         row.pack(fill='both')
         
     def _create_times(self, master):
-        times = self._model_item.starttime[:-4] + ' / ' + self._model_item.endtime[:-4]
-        self._create_title_and_data(master, "Modified / Saved:", times)
+        self._times = self._create_title_and_data(master, "Modified / Saved:", 
+                                                  self._get_times())
+
+    def _get_times(self):
+        return self._model_item.starttime[:-4] + ' / ' + self._model_item.endtime[:-4]
 
     def _save_message(self, event):
         self._model_item.set_message(self._get_message())
-        self._tree_item.update()
+        self.update(update_message=False
+                    )
             
-    def update(self):
-        self._message_field.delete(START, END)
-        self._message_field.insert(START, self._model_item.message)
+    def update(self, update_message=True):
+        if update_message:
+            self._message_field.delete(START, END)
+            self._message_field.insert(START, self._model_item.message)
         self._status.set(self._model_item.status)
+        self._times.update_field(self._get_times())
+        self._tree_item.update()
     
     def _set_status(self, status):
         self._model_item.update_status_and_message(status, self._get_message())
@@ -220,9 +228,12 @@ class TestEditor(AbstractEditor):
         self._create_times(editor)
 
     def _create_tags(self, master):
-        self._create_title_and_data(master, "Tags", 
+        self._tag_label = self._create_title_and_data(master, "Tags", 
                                     ', '.join(self._model_item.tags))
 
+    def update(self, update_message=True):
+        self._tag_label.update_field(', '.join(self._model_item.tags))
+        AbstractEditor.update(self, update_message)
 
 class KeywordEditor(AbstractEditor):
 
