@@ -19,16 +19,14 @@ import sys
 from types import ListType
 from types import StringType
 
-from utils import get_settings_file
+import utils
 
-USER_SETTINGS_FILE = get_settings_path('mabotsettings.py')
-COMPILED_USER_SETTINGS_FILE = USER_SETTINGS_FILE + 'c'
-sys.path.append(os.path.dirname(USER_SETTINGS_FILE))
-
+USER_SETTINGS_FILE = utils.get_settings_path('mabotsettings.py')
 
 class Settings:
     
     def __init__(self):
+        self._user_settings = utils.SettingsIO(USER_SETTINGS_FILE)
         self.load_settings()
 
     def update(self, new_settings, suite):
@@ -41,34 +39,14 @@ class Settings:
         self.save_settings()
     
     def save_settings(self):
-        self._remove_user_settings()
-        try:
-            settings_file = open(USER_SETTINGS_FILE, 'w')
-            settings_file.write(str(self))
-        finally:
-            settings_file.close()
-    
-    def __str__(self):
-        data = 'settings = {\n'
-        for key, value in self.settings.items():
-            data += '            "%s": %s,\n' % (key, self._value_to_str(value))
-        return data + '           }\n'
+        self._user_settings.write_settings(self.settings)
 
-    def _value_to_str(self, value):
-        if type(value) is StringType:
-            return '"""%s"""' % (value)
-        elif type(value) is ListType:
-            string_values = [self._value_to_str(item) for item in value ]
-            return "[ %s ]" % (', '.join(string_values))
-        return value
-        
     def __getitem__(self, name):
         return self.settings[name]
 
     def __setitem__(self, name, value):
         self.settings[name] = value
 
-    
     def load_settings(self):
         from defaultsettings import default_settings
         self.settings = default_settings.copy()
@@ -79,21 +57,17 @@ class Settings:
         except (ImportError, KeyError):
             pass
         try:
-            import mabotsettings
-            reload(mabotsettings)
-            for key in mabotsettings.settings.keys():
-                self.settings[key] = mabotsettings.settings[key]
-        except (ImportError, KeyError):
+            user_settings = self._user_settings.read_settings()
+        except (utils.MissingSettings, utils.InvalidSettings):
             pass
+        else:
+            for key in user_settings.keys():
+                self.settings[key] = user_settings[key]
+            
         
     def restore_settings(self):
-        self._remove_user_settings()
+        self._user_settings.remove_settings()
         self.load_settings()
 
-    def _remove_user_settings(self):
-        if os.path.exists(USER_SETTINGS_FILE):
-            os.remove(USER_SETTINGS_FILE)
-        if os.path.exists(COMPILED_USER_SETTINGS_FILE):
-            os.remove(COMPILED_USER_SETTINGS_FILE)
 
 SETTINGS = Settings()

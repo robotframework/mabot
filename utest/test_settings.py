@@ -19,7 +19,6 @@ import os.path
 from mabot.settings import Settings
 from mabot.settings.defaultsettings import default_settings
 from mabot.settings import USER_SETTINGS_FILE
-from mabot.settings import COMPILED_USER_SETTINGS_FILE
 
 
 class TestSettings(unittest.TestCase):
@@ -29,10 +28,9 @@ class TestSettings(unittest.TestCase):
         self.settings = Settings()
 
     def _remove_settings(self):
-        if os.path.exists(USER_SETTINGS_FILE):
-            os.remove(USER_SETTINGS_FILE)
-        if os.path.exists(COMPILED_USER_SETTINGS_FILE):
-            os.remove(COMPILED_USER_SETTINGS_FILE)
+        for path in [USER_SETTINGS_FILE, '%sc' % USER_SETTINGS_FILE ]:
+            if os.path.exists(path):
+                os.remove(path)
             
     def tearDown(self):
         self._remove_settings()
@@ -47,23 +45,21 @@ class TestSettings(unittest.TestCase):
         
     def test_saving_with_default_settings(self):
         self.settings.save_settings()
-        settings = self._import_settings()
-        reload(settings)
-        self.assertEquals(self.settings.settings, settings.settings)
+        self.assertEquals(self.settings.settings, 
+                          self._read_settings_from_file())
 
     def test_saving_with_modified_settings(self):
         self.settings.save_settings()
-        settings = self._import_settings()
-        reload(settings)
-        self.assertEquals(self.settings.settings, settings.settings)
+        settings = self._read_settings_from_file()
+        self.assertEquals(self.settings.settings, settings)
         self.settings.settings["default_message"] = "My message"
         self.settings.settings["exclude"] = ["a", "b", "c"]
         self.settings.save_settings()
-        reload(settings)
-        self.assertEquals(self.settings.settings, settings.settings)
+        settings = self._read_settings_from_file()
+        self.assertEquals(self.settings.settings, settings)
         self.assertEquals(self.settings.settings["exclude"], ["a", "b", "c"])
         self.settings.load_settings()
-        self.assertEquals(self.settings.settings, settings.settings)
+        self.assertEquals(self.settings.settings, settings)
           
     def test_reverting_default_settings(self):
         defaults = self.settings.settings.copy()
@@ -76,13 +72,14 @@ class TestSettings(unittest.TestCase):
         self.assertEquals(self.settings.settings, defaults)
         self.assertFalse(os.path.exists(USER_SETTINGS_FILE))
 
-    def _import_settings(self):
-        if os.sep == '\\':
-            from mabot.settings import settings
-        else:
-            import settings
-            return settings
-
+    def _read_settings_from_file(self):
+        import mabotsettings
+        reload(mabotsettings)
+        settings = {}
+        for item in dir(mabotsettings):
+            if not item.startswith('_'):
+                settings[item] = getattr(mabotsettings, item)
+        return settings
         
 if __name__ == "__main__":
     unittest.main()
