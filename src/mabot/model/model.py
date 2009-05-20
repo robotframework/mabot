@@ -259,6 +259,10 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
             suite = self._init_data(suite)
         AbstractManualModel.__init__(self, suite, parent)
         self.longname = suite.longname
+        #TODO: Remove support for 2.0.4 RF
+        if hasattr(suite, 'mediumname'):
+            self.mediumname = suite.mediumname
+            self.filtered = suite.filtered
         self.metadata = suite.metadata
         self.critical = suite.critical
         self.critical_stats = suite.critical_stats
@@ -410,6 +414,9 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
             self.message = test.message or ""
         else:
             self.message = self._get_default_message()
+        #TODO: Remove support for 2.0.4 RF
+        if hasattr(test, 'mediumname'):
+            self.mediumname = test.mediumname            
         self.longname = test.longname
         self.setup = self._get_keyword(test.setup, from_xml)
         self.teardown = self._get_keyword(test.teardown, from_xml)
@@ -499,8 +506,6 @@ Do you want your changes to be overridden?"""
     def add_tag(self, tag, mark_modified=True):
         if not self.visible:
             return
-#        TODO: Change to support not normalized tags
-        tag = robotapi.normalize(tag)
         if not tag in self.tags:
             self.tags.append(tag)
             self.tags.sort()
@@ -510,8 +515,6 @@ Do you want your changes to be overridden?"""
     def remove_tag(self, tag):
         if not self.visible:
             return
-#        TODO: Change to support not normalized tags
-        tag = robotapi.normalize(tag)
         if tag in self.tags:
             self.tags.remove(tag)
             self._mark_data_modified(False)
@@ -623,13 +626,12 @@ def get_includes_and_excludes_from_pattern(pattern):
     ands = []
     nots = []
     if 'NOT' in pattern:
-#        TODO: Change to support not normalized tags
-        parts = [ robotapi.normalize(tag) for tag in pattern.split('NOT') ]
+        parts = pattern.split('NOT')
         if '' not in parts:
             ands = [parts[0]]
             nots = parts[1:]
         else:
             nots = ['*']
     else:
-        ands = [ robotapi.normalize(pattern) ]
+        ands = [ pattern ]
     return ands, nots
