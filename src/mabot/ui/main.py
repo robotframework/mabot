@@ -17,6 +17,7 @@ from Tkinter import *
 from Tkinter import _setit
 import tkMessageBox
 import tkFileDialog
+import tkSimpleDialog
 from idlelib import TreeWidget
 
 from tree import SuiteTreeItem
@@ -205,32 +206,34 @@ class Mabot:
         self._create_new_editor()
             
     def _add_tag(self, event=None):
-        if self._active_node is not None \
+        if self._active_node \
             and not self._active_node.item.model_item.is_keyword():
-            dialog = EditTagDialog(self.root, "Add")
-            if dialog.pressed == 'OK':
-                self._add_new_tag(dialog.message)
-            dialog.destroy()
+            tags = tkSimpleDialog.askstring('Add Tags', 
+                            "Add tags (separated with ', ' i.e. tag-1, tag-2)")
+            self._add_new_tags(tags)
         else:
             self._no_node_selected("No test suite or test case selected!")
 
     def _remove_tag(self, event=None):
         if self._active_node is not None \
             and not self._active_node.item.model_item.is_keyword():
-            dialog = EditTagDialog(self.root, "Remove")
+            tags = sorted(self._active_node.item.model_item.get_all_visible_tags([]))
+            dialog = RemoveTagsDialog(self.root, tags)
             if dialog.pressed == 'OK':
-                self._remove_old_tag(dialog.message)
+                self._remove_old_tag(dialog.tags)
             dialog.destroy()
         else:
             self._no_node_selected("No test suite or test case selected!")
     
-    def _add_new_tag(self, tag):
-        self._active_node.item.model_item.add_tag(tag)
+    def _add_new_tags(self, tags):
+        for tag in utils.get_tags_from_string(tags):
+            self._active_node.item.model_item.add_tag(tag)
         self._create_new_editor()
         self._update_visibility()
 
-    def _remove_old_tag(self, tag):
-        self._active_node.item.model_item.remove_tag(tag)
+    def _remove_old_tag(self, tags):
+        for tag in tags:
+            self._active_node.item.model_item.remove_tag(tag)
         self._create_new_editor()
         self._update_visibility()
             
@@ -267,12 +270,14 @@ class Mabot:
             saved, changes = self.io.save_data(path)
             progress.destroy()
             if changes:
+                print "Changes!"
                 self._init_tree_view()
                 self._update_visibility()
                 self._create_new_editor()
             if saved:
                 message = 'Wrote output to ' + self.io.output
                 self._statusbar_right.configure(text=message)
+                self.current_editor.update()
             else:
                 if changes:
                     message = 'Loaded changes from ' + self.io.output

@@ -15,7 +15,10 @@
 
 def get_tags_from_string(tags_string):
     """Return list of tags from given string"""
-    tags = tags_string.split(', ')
+    if tags_string:
+        tags = tags_string.split(', ')
+    else:
+        tags = []
     return [ tag for tag in tags if tag ]
 
 def get_status_color(item):

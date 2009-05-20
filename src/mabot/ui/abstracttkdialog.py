@@ -27,7 +27,7 @@ class AbstractTkDialog(Toplevel):
         self.result = None
         body = Frame(self)
         self.initial_focus = self.body(body)
-        body.pack(padx=5, pady=5)
+        body.pack(padx=5, pady=5, expand=1, fill=BOTH)
         self.buttonbox()
         self.grab_set()
         if not self.initial_focus:

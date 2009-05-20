@@ -44,6 +44,27 @@ class TextMessageDialog(AbstractTkDialog):
     def validate(self):
         return self.message_field.get(START, END) != ''
 
+class EntryDialog(AbstractTkDialog):
+
+    def __init__(self, parent, title, label, default_message=""):
+        self._label = label
+        self._default_message = default_message
+        AbstractTkDialog.__init__(self, parent, title)
+
+    def body(self, master):
+        Label(master, text=self._label).grid(row=0, sticky=W+E)
+        self._entry = Entry(master)
+        self._entry.insert(0, self._default_message)
+        self._entry.grid(row=1, sticky=W+E)
+        return self._entry # initial focus
+
+    def apply(self):
+        self.message = self._entry.get()
+    
+    def validate(self):
+        return self._entry.get() != ''
+
+
 class SettingsDialog(AbstractTkDialog):
 
     def __init__(self, parent, title):
@@ -148,11 +169,39 @@ class ChangeStatusDialog(TextMessageDialog):
                                    "Give reason for failure:" , 5, 50, 
                                    SETTINGS["default_message"])
 
-class EditTagDialog(TextMessageDialog):
+class AddTagsDialog(EntryDialog):
 
-    def __init__(self, parent, type):
-        TextMessageDialog.__init__(self, parent, type + " Tag",
-                                   "Give tag:", 2, 20)
+    def __init__(self, parent):
+        EntryDialog.__init__(self, parent, "Add Tags",
+                                   "Give tags (i.e. tag1, tag2)")
+    
+    def apply(self):
+        EntryDialog.apply(self)
+        self.tags = utils.get_tags_from_string(self.message)
+
+class RemoveTagsDialog(AbstractTkDialog):
+
+    def __init__(self, parent, tags):
+        self._all_tags = tags
+        self.tags = []
+        AbstractTkDialog.__init__(self, parent, 'Remove Tags')
+        
+    def body(self, master):
+        scrollbar = Scrollbar(master, orient=VERTICAL)
+        self.listbox = Listbox(master, selectmode=EXTENDED, 
+                               yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.listbox.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        self.listbox.pack(fill=BOTH, expand=1)
+        for tag in self._all_tags:
+            self.listbox.insert(END, tag)
+
+    def validate(self):
+        return self.listbox.curselection()
+
+    def apply(self):
+        self.tags = [ self._all_tags[int(i)] for i in self.listbox.curselection() ]
+
 
 class AskAdditionalTagsDialog(TextMessageDialog):
 
