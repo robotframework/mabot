@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 
+import os
 from Tkinter import *
 import thread
 import time
@@ -21,6 +22,9 @@ import time
 class ProgressBar(Toplevel):
     
     def __init__(self, parent, title):
+        if os.name != 'nt':
+            self.not_created = True
+            return 
         Toplevel.__init__(self, parent)
         self.title(title)
         self.protocol("WM_DELETE_WINDOW", lambda: True) 
@@ -30,9 +34,8 @@ class ProgressBar(Toplevel):
         self.progress_bar_view = ProgressBarView(self, self.width, self.height)
         self.progress_bar_view.pack()
         parent.update()
-        self.ready = False
-        self.running = True
-        thread.start_new(self._update, ())
+        self._running = thread.allocate_lock()
+        thread.start_new_thread(self._update, ())
 
     def _get_location(self, parent):
         x = parent.winfo_rootx() + parent.winfo_width()/2 - self.width/2
@@ -40,15 +43,15 @@ class ProgressBar(Toplevel):
         return "+%d+%d" % (x, y) 
 
     def _update(self):
-        while not self.ready:
+        while self._running.acquire(0):
             self.progress_bar_view.update_progress()
             time.sleep(0.1)
-        self.running = False
-
+            self._running.release()
+            
     def destroy(self):
-        self.ready = True
-        while not self.running:
-            time.sleep(0.01)
+        if self.not_created:
+            return
+        self._running.acquire()
         Toplevel.destroy(self)
 
         
@@ -85,4 +88,3 @@ class ProgressBarView:
         end = float(self.value) / self.width * self.width
         self.canvas.coords(self.scale, start, 0, end, self.height)
         self.canvas.update_idletasks()
-
