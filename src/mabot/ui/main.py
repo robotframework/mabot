@@ -44,7 +44,7 @@ class Mabot:
         self.io = IO(tkMessageBox.askyesno)
         self.suite = self.io.load_data(None)
         self._create_ui()
-        self._load_data_and_create_ui(datasource)
+        self._load_data_and_update_ui(datasource)
         self._ask_additional_tags()
         self.root.mainloop()
 
@@ -56,7 +56,7 @@ class Mabot:
         if options['include'] or options['exclude']:
             SETTINGS.save_settings()
 
-    def _load_data_and_create_ui(self, datasource):
+    def _load_data_and_update_ui(self, datasource):
         try:
             progress = ProgressBar(self.root, 'Loading...')
             self.suite = self.io.load_data(datasource)
@@ -68,7 +68,7 @@ class Mabot:
             progress.destroy()
             self._show_error(error, "Unexpected error while loading data!")
         else:
-            self._create_ui()
+            self._update_ui()
 
     def _show_error(self, error, message):
         tkMessageBox.showerror(message, error[0])            
@@ -79,17 +79,18 @@ class Mabot:
         self._create_middle_window()
         self._create_statusbar(self.root)
 
+    def _update_ui(self):
+        self._init_tree_view()
+        self._create_new_editor()
+
     def _ask_additional_tags(self):
-        if not SETTINGS['ask_additional_tags_at_startup']:
-            return
-        dialog = AskAdditionalTagsDialog(self.root, 
-                                         ', '.join(SETTINGS['additional_tags']))
-        if dialog.pressed == 'OK':
-            new_tags = utils.get_tags_from_string(dialog.message.strip())
-            if new_tags != SETTINGS['additional_tags']:
-                SETTINGS['additional_tags'] = new_tags
-                SETTINGS.save_settings()
-        dialog.destroy()
+        if SETTINGS['ask_additional_tags_at_startup']:
+            prompt = "Give tag(s) that you want to add to all the test cases\n"\
+                     "you are going to report (i.e. env-x, build-y):"
+            tags = tkSimpleDialog.askstring("Additional Tags", prompt,
+                            initialvalue=', '.join(SETTINGS['additional_tags']))
+            SETTINGS['additional_tags'] = utils.get_tags_from_string(tags)
+            SETTINGS.save_settings()
 
     def _create_root(self):
         self.root.destroy()
@@ -203,27 +204,31 @@ class Mabot:
         else:
             self._active_node.item.model_item.update_status_and_message(status, message)
         self.node.update()
-        self._create_new_editor()
+        self.current_editor.update()
+            
+    
+        self._statusbar_right.configure(text=message)
+        
             
     def _add_tag(self, event=None):
-        if self._active_node \
-            and not self._active_node.item.model_item.is_keyword():
+        if self._active_node.item.model_item.is_keyword():
+            self._statusbar_right.configure(text=
+                            "No test suite or test case selected")
+        else:
             tags = tkSimpleDialog.askstring('Add Tags', 
                             "Add tags (separated with ', ' i.e. tag-1, tag-2)")
             self._add_new_tags(tags)
-        else:
-            self._no_node_selected("No test suite or test case selected!")
 
     def _remove_tag(self, event=None):
-        if self._active_node is not None \
-            and not self._active_node.item.model_item.is_keyword():
+        if self._active_node.item.model_item.is_keyword():
+            self._statusbar_right.configure(text=
+                            "No test suite or test case selected")
+        else:
             tags = sorted(self._active_node.item.model_item.get_all_visible_tags([]))
             dialog = RemoveTagsDialog(self.root, tags)
             if dialog.pressed == 'OK':
                 self._remove_old_tag(dialog.tags)
             dialog.destroy()
-        else:
-            self._no_node_selected("No test suite or test case selected!")
     
     def _add_new_tags(self, tags):
         for tag in utils.get_tags_from_string(tags):
@@ -237,11 +242,6 @@ class Mabot:
         self._create_new_editor()
         self._update_visibility()
             
-    def _no_node_selected(self, message=None):
-        if message is None:
-            message = "No test suite, test case or keyword selected!"
-        self._statusbar_right.configure(text=message)
-
     def notify_select(self, tree_node):
         if self._active_node is None or tree_node != self._active_node:
             self._active_node = tree_node
@@ -256,13 +256,13 @@ class Mabot:
         if self._continue_without_saving():
             path = tkFileDialog.Open().show()
             if path:
-                self._load_data_and_create_ui(path)
+                self._load_data_and_update_ui(path)
         
     def _open_dir(self, event=None):
         if self._continue_without_saving():
             directory = tkFileDialog.Directory().show()
             if directory:
-                self._load_data_and_create_ui(directory)
+                self._load_data_and_update_ui(directory)
                 
     def _save(self, path=None):
         try:
@@ -270,7 +270,6 @@ class Mabot:
             saved, changes = self.io.save_data(path)
             progress.destroy()
             if changes:
-                print "Changes!"
                 self._init_tree_view()
                 self._update_visibility()
                 self._create_new_editor()
