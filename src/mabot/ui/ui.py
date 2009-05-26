@@ -22,49 +22,6 @@ from mabot import utils
 
 START = 1.0
 
-class TextMessageDialog(AbstractTkDialog):
-
-    def __init__(self, parent, title, comment, height=5, width=40, message=""):
-        self.message = message
-        self.comment = comment
-        self.width=width
-        self.height=height
-        AbstractTkDialog.__init__(self, parent, title)
-
-    def body(self, master):
-        Label(master, text=self.comment).grid(row=0)
-        self.message_field = Text(master, height=self.height, width=self.width)
-        self.message_field.insert(START, self.message)
-        self.message_field.grid(row=1)
-        return self.message_field # initial focus
-
-    def apply(self):
-        self.message = self.message_field.get(START, END)
-    
-    def validate(self):
-        return self.message_field.get(START, END) != ''
-
-class EntryDialog(AbstractTkDialog):
-
-    def __init__(self, parent, title, label, default_message=""):
-        self._label = label
-        self._default_message = default_message
-        AbstractTkDialog.__init__(self, parent, title)
-
-    def body(self, master):
-        Label(master, text=self._label).grid(row=0, sticky=W+E)
-        self._entry = Entry(master)
-        self._entry.insert(0, self._default_message)
-        self._entry.grid(row=1, sticky=W+E)
-        return self._entry # initial focus
-
-    def apply(self):
-        self.message = self._entry.get()
-    
-    def validate(self):
-        return self._entry.get() != ''
-
-
 class SettingsDialog(AbstractTkDialog):
 
     def __init__(self, parent, title):
@@ -162,22 +119,28 @@ class SettingsDialog(AbstractTkDialog):
         return self.default_message.get(START, END) != ''
     
         
-class ChangeStatusDialog(TextMessageDialog):
+class ChangeStatusDialog(AbstractTkDialog):
 
     def __init__(self, parent):
-        TextMessageDialog.__init__(self, parent, "Set Failed",
-                                   "Give reason for failure:" , 5, 50, 
-                                   SETTINGS["default_message"])
+        self.message = SETTINGS["default_message"]
+        self.comment = "Give reason for failure:"
+        self.width = 5
+        self.height = 50
+        AbstractTkDialog.__init__(self, parent, "Set Failed")
 
-class AddTagsDialog(EntryDialog):
+    def body(self, master):
+        Label(master, text=self.comment).grid(row=0)
+        self.message_field = Text(master, height=self.height, width=self.width)
+        self.message_field.insert(START, self.message)
+        self.message_field.grid(row=1)
+        return self.message_field # initial focus
 
-    def __init__(self, parent):
-        EntryDialog.__init__(self, parent, "Add Tags",
-                                   "Give tags (i.e. tag1, tag2)")
-    
     def apply(self):
-        EntryDialog.apply(self)
-        self.tags = utils.get_tags_from_string(self.message)
+        self.message = self.message_field.get(START, END)
+    
+    def validate(self):
+        return self.message_field.get(START, END) != ''
+
 
 class RemoveTagsDialog(AbstractTkDialog):
 
@@ -201,15 +164,6 @@ class RemoveTagsDialog(AbstractTkDialog):
 
     def apply(self):
         self.tags = [ self._all_tags[int(i)] for i in self.listbox.curselection() ]
-
-
-class AskAdditionalTagsDialog(TextMessageDialog):
-
-    def __init__(self, parent, data):
-        label = """Give tag(s) that you want to add to all the test cases
-you are going to report (i.e. env-x, build-y):"""
-        TextMessageDialog.__init__(self, parent, "Additional Tags", label,
-                                   1, 50, data)
 
 
 class CommonFrame(Frame):
