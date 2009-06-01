@@ -30,7 +30,7 @@ class SettingsIO:
         else:
             self.directory, self._path = self._get_paths(tool_name, file_name)
         if not os.path.exists(self.directory):
-            os.mkdir(directory)
+            os.mkdir(self.directory)
 
     def _get_paths(self, tool_name, file_name):
         if not file_name:
