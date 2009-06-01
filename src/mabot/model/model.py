@@ -431,8 +431,30 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def _mark_data_modified(self, executed=True):
         AbstractManualModel._mark_data_modified(self)
         if executed:
-            for tag in SETTINGS["additional_tags"]:
-                self.add_tag(tag, mark_modified=False)
+            self._remove_tags_matching_additional_tag_prefixes()
+            self._add_additional_tags()
+
+    def _remove_tags_matching_additional_tag_prefixes(self):
+        prefixes = self._get_prefixes(SETTINGS["additional_tags"])
+        remove_tags = []
+        for tag in self.tags:
+            for prefix in prefixes:
+                if tag.startswith(prefix):
+                    remove_tags.append(tag)
+        for tag in remove_tags:
+            self.tags.remove(tag)
+        
+    def _get_prefixes(self, tags):
+        prefixes = []
+        for tag in tags:
+            if '-' in tag:
+                prefix = tag[:tag.rfind('-')+1]
+                prefixes.append(prefix)
+        return prefixes
+            
+    def _add_additional_tags(self):
+        for tag in SETTINGS["additional_tags"]:
+            self.add_tag(tag, mark_modified=False)
             
     def _get_items(self):
         return self.keywords

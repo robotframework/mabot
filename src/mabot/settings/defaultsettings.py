@@ -15,6 +15,7 @@
 
 default_message = "Not Executed!"
 ask_additional_tags_at_startup = False
+remove_tags_matching_additional_tags_prefixes = False
 additional_tags = []
 always_load_old_data_from_xml = False
 check_simultaneous_save = False

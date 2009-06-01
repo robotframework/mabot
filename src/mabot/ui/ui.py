@@ -31,12 +31,13 @@ class SettingsDialog(AbstractTkDialog):
     def body(self, master):
         self._default_message(master, 0)
         self._ask_additional_tags_at_startup(master, 1)
-        self._addition_tags_for_executed_test(master, 2)
-        self._info_label(master, 3)
-        self._always_load_old_data_from_xml(master, 4)
-        self._check_simultaneous_save(master, 5)
-        self._include(master, 6)
-        self._exclude(master, 7)
+        self._remove_tags_matching_additional_tags_prefixes(master, 2)
+        self._addition_tags_for_executed_test(master, 3)
+        self._info_label(master, 4)
+        self._always_load_old_data_from_xml(master, 5)
+        self._check_simultaneous_save(master, 6)
+        self._include(master, 7)
+        self._exclude(master, 8)
 
     def _info_label(self, master, row):
         text = "\nSettings below will affect after loading new data\n"
@@ -51,6 +52,11 @@ class SettingsDialog(AbstractTkDialog):
     def _ask_additional_tags_at_startup(self, master, row):
         self.ask_additional_tags_at_startup = self._create_radio_buttons(master, 
             "Ask Additional Tags at Start Up:", SETTINGS["ask_additional_tags_at_startup"], row)
+
+    def _remove_tags_matching_additional_tags_prefixes(self, master, row):
+        self.remove_additional_tags_prefixes = self._create_radio_buttons(master, 
+            "Remove Tags Matching Additional Tags Prefixes:", 
+            SETTINGS["remove_tags_matching_additional_tags_prefixes"], row)
 
     def _addition_tags_for_executed_test(self, master, row):
         self.addition_tags = self._create_entry(master, "Additional Tags (i.e. executed-by-x, build-y):", 
@@ -96,12 +102,14 @@ class SettingsDialog(AbstractTkDialog):
     def apply(self):
         ask_additional_tags = self._get_boolean(self.ask_additional_tags_at_startup)
         additional_tags = self._get_tags(self.addition_tags)
+        remove_additional = self._get_boolean(self.remove_additional_tags_prefixes)
         load_always = self._get_boolean(self.always_load_old_data_from_xml)
         check_simultaneous = self._get_boolean(self.check_simultaneous_save)
         include = self._get_tags(self.include)
         exclude = self._get_tags(self.exclude)
         self.new_settings = {"default_message":self.default_message.get(START, END).strip(),
                             "ask_additional_tags_at_startup":ask_additional_tags, 
+                            "remove_tags_matching_additional_tags_prefixes":remove_additional,
                             "additional_tags":additional_tags,
                             "always_load_old_data_from_xml":load_always,
                             "check_simultaneous_save":check_simultaneous,
