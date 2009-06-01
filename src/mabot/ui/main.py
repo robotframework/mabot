@@ -41,7 +41,7 @@ class Mabot:
     def __init__(self, datasource, options):
         self.root = Tk()
         self._save_options(options)
-        self.io = IO(tkMessageBox.askyesno)
+        self.io = IO()
         self.suite = self.io.load_data(None)
         self._create_ui()
         self._load_data_and_update_ui(datasource)
@@ -54,11 +54,11 @@ class Mabot:
         if options['exclude']:
             SETTINGS['exclude'] = options['exclude']
         if options['include'] or options['exclude']:
-            SETTINGS.save_settings()
+            SETTINGS.save()
 
     def _load_data_and_update_ui(self, datasource):
+        progress = ProgressBar(self.root, 'Loading...')
         try:
-            progress = ProgressBar(self.root, 'Loading...')
             self.suite = self.io.load_data(datasource)
             progress.destroy()
         except IOError, error:
@@ -90,7 +90,7 @@ class Mabot:
             tags = tkSimpleDialog.askstring("Additional Tags", prompt,
                             initialvalue=', '.join(SETTINGS['additional_tags']))
             SETTINGS['additional_tags'] = utils.get_tags_from_string(tags)
-            SETTINGS.save_settings()
+            SETTINGS.save()
 
     def _create_root(self):
         self.root.destroy()
@@ -265,28 +265,31 @@ class Mabot:
                 self._load_data_and_update_ui(directory)
                 
     def _save(self, path=None):
+        progress = ProgressBar(self.root, 'Saving...')
+        progress.add_ask_method(tkMessageBox.askyesno)
         try:
-            progress = ProgressBar(self.root, 'Saving...')
-            saved, changes = self.io.save_data(path)
+            saved, changes = self.io.save_data(path, progress.call_ask_method)
             progress.destroy()
-            if changes:
-                self._init_tree_view()
-                self._update_visibility()
-                self._create_new_editor()
-            if saved:
-                message = 'Wrote output to ' + self.io.output
-                self._statusbar_right.configure(text=message)
-                self.current_editor.update()
-            else:
-                if changes:
-                    message = 'Loaded changes from ' + self.io.output
-                    self._statusbar_right.configure(text=message)                            
-                else:
-                    self._statusbar_right.configure(text='No changes to be saved')        
         except Exception, error:
             progress.destroy()
-            tkMessageBox.showerror('Saving Failed!', error[0])
-                    
+            tkMessageBox.showerror('Saving Failed!', error.message)
+            return
+        if changes:
+            self._init_tree_view()
+            self._update_visibility()
+            self._create_new_editor()
+        if saved:
+            self._statusbar('Wrote output to ' + self.io.output)
+            self.current_editor.update()
+        else:
+            if changes:
+                self._statusbar('Loaded changes from ' + self.io.output)
+            else:
+                self._statusbar('No changes to be saved')        
+                 
+    def _statusbar(self, message):
+        self._statusbar_right.configure(text=message)
+       
     def _save_as(self):
         path = tkFileDialog.SaveAs().show()
         if path:
@@ -303,7 +306,8 @@ class Mabot:
 
     def _edit_settings(self):
         settings_dialog = SettingsDialog(self.root, "Settings")
-        SETTINGS.update(settings_dialog.new_settings, self.suite)
+        SETTINGS.update_settings(settings_dialog.new_settings, self.suite)
+        self.current_editor.update()
                         
     def _about(self, event=None):
         msg = '''Mabot, version %s
@@ -366,7 +370,7 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
         settingsmenu = Menu(menubar, tearoff=0)
         settingsmenu.add_command(label="Settings", command=self._edit_settings)
         settingsmenu.add_command(label="Restore Settings", 
-                                 command=SETTINGS.restore_settings)
+                                 command=SETTINGS.restore)
         menubar.add_cascade(label="Settings", menu=settingsmenu)
 
     def _create_tools_menu(self, menubar):

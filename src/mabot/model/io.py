@@ -39,8 +39,8 @@ from mabot.utils import robotapi
 
 class IO:
     
-    def __init__(self, ask_method):
-        self.ask_method = ask_method
+    def __init__(self):
+        self.ask_method = None
         self.xml_generated = None
         self.output = None
         self.suite = EmptySuite()
@@ -73,7 +73,7 @@ class IO:
         elif data_error is not None:
             error = data_error[0]
         elif xml_error is not None:
-            error = xml_error[0]      
+            error = xml_error[0]
         raise IOError("Could not load data!\n%s\n" % (error))
 
     def _load_xml_file(self, xml):
@@ -120,14 +120,14 @@ class IO:
             return True
         return extension.lower() in [ '.html', '.xml', '.tsv' ]
 
-    def save_data(self, output=None):
+    def save_data(self, output, ask_method):
         if output:
             self.output = output
         lock = utils.LockFile(self.output)
-        lock.create_lock(self.ask_method)
+        lock.create_lock(ask_method)
         try:
             self._make_backup()
-            changes = self._reload_data_from_xml()
+            changes = self._reload_data_from_xml(ask_method)
             if DATA_MODIFIED.is_modified() or output:
                 self._save_data()
                 return True, changes
@@ -135,14 +135,14 @@ class IO:
         finally:
             lock.release_lock()
 
-    def _reload_data_from_xml(self):
+    def _reload_data_from_xml(self, ask_method):
         if SETTINGS["always_load_old_data_from_xml"] and \
             SETTINGS["check_simultaneous_save"] and \
             os.path.exists(self.output) and \
             self.xml_generated != self._get_xml_generation_time():
             xml_suite = ManualSuite(robotapi.XmlTestSuite(self.output), None, True)                
             if xml_suite:
-                self.suite.add_results(xml_suite, True, self.ask_method)
+                self.suite.add_results(xml_suite, True, ask_method)
                 return True
         return False
 
@@ -150,7 +150,7 @@ class IO:
         self.suite.save()
         self._make_backup()
         #TODO: Change how execution errors are given
-        testoutput = robotapi.RobotTestOutput(self.suite, utils.LOGGER)
+        testoutput = robotapi.RobotTestOutput(self.suite)
         testoutput.serialize_output(self.output, self.suite)            
         self.suite.saved()
         DATA_MODIFIED.saved()

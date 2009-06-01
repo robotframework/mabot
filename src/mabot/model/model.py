@@ -299,7 +299,7 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         robotapi.RunnableTestSuite._add_test_to_stats(self, test)
 
     def _init_data(self, suite):
-        varz = robotapi.Namespace(suite, None, utils.LOGGER).variables
+        varz = robotapi.Namespace(suite, None).variables
         suite._init_suite(varz)
         for test in suite.tests:
             test._init_test(varz)
@@ -370,7 +370,9 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
             item.remove_tag(tag)
     
     def update_default_message(self, old_default, new_default):
-        for item in self.suites+self.tests:
+        if old_default.strip() == new_default.strip():
+            return
+        for item in self._get_items():
             item.update_default_message(old_default, new_default)
         
     def save(self):
