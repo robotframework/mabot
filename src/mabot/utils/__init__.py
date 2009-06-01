@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 
-from logger import LOGGER
 from io import load_data
 from lock import LockFile
 from utils import get_tags_from_string, get_status_color

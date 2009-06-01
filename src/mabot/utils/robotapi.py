@@ -1,6 +1,8 @@
+import sys
+
 try:
     from robot.output import TestSuite as XmlTestSuite
-    from robot.serializing.testoutput import RobotTestOutput
+    from robot.serializing.testoutput import RobotTestOutput as _RobotTestOutput
     from robot.common import UserErrorHandler
     from robot.running.model import RunnableTestSuite, RunnableTestCase
     from robot.output.readers import Message
@@ -18,24 +20,34 @@ try:
     else:
         class Information(Exception):
             """Used by argument parser with --help or --version"""
+    if ROBOT_VERSION >= '2.1':
+        from robot.output.logger import LOGGER
+        LOGGER.disable_automatic_console_logger()
 except ImportError, error:
     print """All needed Robot modules could not be imported. 
 Check your Robot installation."""
-    print "Error was: %s" % (error[0])
+    print "Error was: %s" % (error.message)
     sys.exit(1)
 
 
-def Namespace(suite, parent, syslog):
+
+def Namespace(suite, parent):
     if ROBOT_VERSION >= '2.1':
         return _NameSpace(suite, parent)
     else:
-        return _NameSpace(suite, parent, syslog)
+        return _NameSpace(suite, parent, NoOperation())
 
-def TestSuite(datasources, settings, syslog):
+
+def TestSuite(datasources, settings):
     if ROBOT_VERSION >= '2.1':
         return _TestSuite(datasources, settings)
     else:
-        return _TestSuite(datasources, settings, syslog)
+        return _TestSuite(datasources, settings, NoOperation())
+
+
+def RobotTestOutput(suite):
+    return _RobotTestOutput(suite, NoOperation())
+
     
 def get_elapsed_time(start_time, end_time=None, seps=('', ' ', ':', '.')):
     elapsed = _get_elapsed_time(start_time, end_time, seps)
@@ -65,9 +77,18 @@ class _ArgumentParserFor2_0_2AndOlderRobot(_ArgumentParser):
             DataError("[ERROR] Only one datasource is allowed.")
         return opts, args
 
+
 def ArgumentParser(doc, version, arg_limits):
     if ROBOT_VERSION >= '2.0.3':
         return _ArgumentParser(doc, version, arg_limits)
     else:
         return _ArgumentParserFor2_0_2AndOlderRobot(doc, version)
+
+
+class NoOperation:
     
+    def __getattr__(self, name):
+        return self.noop
+    
+    def noop(self, *args, **kwargs):
+        pass    

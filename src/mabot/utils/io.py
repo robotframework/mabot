@@ -14,12 +14,11 @@
 
 
 from robotapi import TestSuite, RobotSettings
-import logger
 
 
 def load_data(source, settings):
     robot_settings = RobotSettings()
     robot_settings['Include'] = settings['include']
     robot_settings['Exclude'] = settings['exclude']
-    return TestSuite([source], robot_settings, logger.LOGGER)
+    return TestSuite([source], robot_settings)
     
