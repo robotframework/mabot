@@ -24,6 +24,7 @@ class ProgressBar(Toplevel):
     def __init__(self, parent, title):
         self._parent = parent
         self._title = title
+        self.not_created = False
         self._init_progress_bar()
 
     def _init_progress_bar(self):
@@ -35,10 +36,10 @@ class ProgressBar(Toplevel):
         self.protocol("WM_DELETE_WINDOW", lambda: True) 
         self.width = 200
         self.height = 10
-        self.geometry(self._get_location(parent))
+        self.geometry(self._get_location(self._parent))
         self.progress_bar_view = ProgressBarView(self, self.width, self.height)
         self.progress_bar_view.pack()
-        parent.update()
+        self._parent.update()
         self._running = thread.allocate_lock()
         thread.start_new_thread(self._update, ())
     
