@@ -16,70 +16,87 @@
 import unittest
 import os.path
 
-from mabot.settings import Settings
-from mabot.settings.defaultsettings import default_settings
-from mabot.settings import USER_SETTINGS_FILE
+from mabot.settings import Settings, defaultsettings
+from mabot.settings.utils import SettingsIO
 
-
+        
 class TestSettings(unittest.TestCase):
 
     def setUp(self):
+        self.path = os.path.join(os.path.dirname(__file__), 'data', 
+                                 'testsettings.py')
         self._remove_settings()
-        self.settings = Settings()
+        self.settings = Settings(self.path)
+        self.suite = Suite()
 
-    def _remove_settings(self):
-        for path in [USER_SETTINGS_FILE, '%sc' % USER_SETTINGS_FILE ]:
-            if os.path.exists(path):
-                os.remove(path)
-            
     def tearDown(self):
         self._remove_settings()
 
     def test_loading_default_settings(self):
-        expected = self.settings.settings.copy()
-        expected["exclude"] = default_settings["exclude"]
-        expected["ask_additional_tags_at_startup"] = default_settings["ask_additional_tags_at_startup"]
-        self.assertEquals(self.settings.settings, expected)
-        self.assertEquals(self.settings.settings["include"], [])
-        self.assertEquals(self.settings.settings["exclude"], [])
+        expected = self.settings._settings.copy()
+        expected = self._read_settings_from_file(defaultsettings.__file__[:-1])
+        self.assertEquals(self.settings._settings, expected)
+        self.assertEquals(self.settings._settings["include"], [])
+        self.assertEquals(self.settings._settings["exclude"], [])
+        self.assertEquals(self.settings._settings["default_message"], 
+                          "Not Executed!")
         
     def test_saving_with_default_settings(self):
-        self.settings.save_settings()
-        self.assertEquals(self.settings.settings, 
+        self.settings.save()
+        self.assertEquals(self.settings._settings, 
                           self._read_settings_from_file())
 
     def test_saving_with_modified_settings(self):
-        self.settings.save_settings()
+        self.settings.save()
         settings = self._read_settings_from_file()
-        self.assertEquals(self.settings.settings, settings)
-        self.settings.settings["default_message"] = "My message"
-        self.settings.settings["exclude"] = ["a", "b", "c"]
-        self.settings.save_settings()
+        self.assertEquals(self.settings._settings, settings)
+        self.settings._settings["default_message"] = "My message"
+        self.settings._settings["exclude"] = ["a", "b", "c"]
+        self.settings.save()
         settings = self._read_settings_from_file()
-        self.assertEquals(self.settings.settings, settings)
-        self.assertEquals(self.settings.settings["exclude"], ["a", "b", "c"])
-        self.settings.load_settings()
-        self.assertEquals(self.settings.settings, settings)
+        self.assertEquals(self.settings._settings, settings)
+        self.assertEquals(self.settings._settings["exclude"], ["a", "b", "c"])
+        self.settings.load()
+        self.assertEquals(self.settings._settings, settings)
           
     def test_reverting_default_settings(self):
-        defaults = self.settings.settings.copy()
-        self.settings.settings["default_message"] = "My message"
-        self.settings.settings["exclude"] = ["a", "b", "c"]
-        self.settings.save_settings()
-        self.assertEquals(self.settings.settings["exclude"],["a", "b", "c"])
-        self.assertTrue(os.path.exists(USER_SETTINGS_FILE))
-        self.settings.restore_settings()
-        self.assertEquals(self.settings.settings, defaults)
-        self.assertFalse(os.path.exists(USER_SETTINGS_FILE))
+        defaults = self.settings._settings.copy()
+        self.settings._settings["default_message"] = "My message"
+        self.settings._settings["exclude"] = ["a", "b", "c"]
+        self.settings.save()
+        self.assertEquals(self.settings._settings["exclude"],["a", "b", "c"])
+        self.assertTrue(os.path.exists(self.path))
+        self.settings.restore()
+        self.assertEquals(self.settings._settings, defaults)
+        self.assertEquals(self._read_settings_from_file(), defaults)
 
-    def _read_settings_from_file(self):
-        import mabotsettings
-        reload(mabotsettings)
-        settings = {}
-        for item in dir(mabotsettings):
-            if not item.startswith('_'):
-                settings[item] = getattr(mabotsettings, item)
-        return settings
+    def test_update_settings_affects_suite_when_default_message_is_not_changed(self):
+        defaults = {'default_message':"Not Executed!"}
+        self.settings.update_settings(defaults, self.suite)
+        self.assertEquals(self.suite.called, [])
         
+    def test_update_settings_affects_suite_when_default_message_is_changed(self):
+        not_defaults = {'default_message':"New"}
+        self.settings.update_settings(not_defaults, self.suite)
+        self.assertEquals(self.suite.called, [('Not Executed!', 'New')])
+
+    def _read_settings_from_file(self, path=None):
+        if path:
+            return SettingsIO(path=path).read()
+        return SettingsIO(path=self.path).read()
+
+    def _remove_settings(self):
+        if os.path.exists(self.path):
+            os.remove(self.path)
+
+class Suite:
+    
+    def __init__(self):
+        self.called = []
+        
+    def update_default_message(self, orig, changed):
+        self.called.append((orig, changed))
+
+
 if __name__ == "__main__":
     unittest.main()

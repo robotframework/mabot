@@ -19,55 +19,29 @@ import sys
 from types import ListType
 from types import StringType
 
-import utils
+from utils import RFSettings
 
-USER_SETTINGS_FILE = utils.get_settings_path('mabotsettings.py')
-
-class Settings:
+class Settings(RFSettings):
     
-    def __init__(self):
-        self._user_settings = utils.SettingsIO(USER_SETTINGS_FILE)
-        self.load_settings()
+    def __init__(self, path=None):
+        self.defaults_settings = os.path.join(os.path.dirname(__file__), 
+                                              'defaultsettings.py')
+        self.project_settings = os.path.join(os.path.dirname(__file__), 
+                                              'projectsettings.py')
+        defaults = RFSettings(path=self.defaults_settings, 
+                              defaults=self.project_settings)._settings
+        if path:
+            RFSettings.__init__(self, path=path, defaults=defaults)
+        else:
+            RFSettings.__init__(self, 'mabot', defaults=defaults)
+        self.load()
 
-    def update(self, new_settings, suite):
+    def update_settings(self, new_settings, suite):
         if not new_settings:
             return
-        if self.settings["default_message"] != new_settings["default_message"]:
-           suite.update_default_message(self.settings["default_message"],
-                                        new_settings["default_message"])        
-        self.settings = new_settings
-        self.save_settings()
-    
-    def save_settings(self):
-        self._user_settings.write_settings(self.settings)
-
-    def __getitem__(self, name):
-        return self.settings[name]
-
-    def __setitem__(self, name, value):
-        self.settings[name] = value
-
-    def load_settings(self):
-        from defaultsettings import default_settings
-        self.settings = default_settings.copy()
-        try:
-            from projectsettings import project_settings
-            for key in project_settings.keys():
-                self.settings[key] = project_settings[key]
-        except (ImportError, KeyError):
-            pass
-        try:
-            user_settings = self._user_settings.read_settings()
-        except (utils.MissingSettings, utils.InvalidSettings):
-            pass
-        else:
-            for key in user_settings.keys():
-                self.settings[key] = user_settings[key]
-            
-        
-    def restore_settings(self):
-        self._user_settings.remove_settings()
-        self.load_settings()
-
+        suite.update_default_message(self._settings["default_message"],
+                                     new_settings["default_message"])        
+        RFSettings.update(self, new_settings)
+   
 
 SETTINGS = Settings()
