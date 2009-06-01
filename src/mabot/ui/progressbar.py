@@ -22,11 +22,16 @@ import time
 class ProgressBar(Toplevel):
     
     def __init__(self, parent, title):
+        self._parent = parent
+        self._title = title
+        self._init_progress_bar()
+
+    def _init_progress_bar(self):
         if os.name != 'nt':
             self.not_created = True
-            return 
-        Toplevel.__init__(self, parent)
-        self.title(title)
+            return
+        Toplevel.__init__(self, self._parent)
+        self.title(self._title)
         self.protocol("WM_DELETE_WINDOW", lambda: True) 
         self.width = 200
         self.height = 10
@@ -36,6 +41,15 @@ class ProgressBar(Toplevel):
         parent.update()
         self._running = thread.allocate_lock()
         thread.start_new_thread(self._update, ())
+    
+    def add_ask_method(self, method):
+        self._ask_method = method
+        
+    def call_ask_method(self, *args):
+        self.destroy()
+        result = self._ask_method(*args)
+        self._init_progress_bar()
+        return result
 
     def _get_location(self, parent):
         x = parent.winfo_rootx() + parent.winfo_width()/2 - self.width/2
