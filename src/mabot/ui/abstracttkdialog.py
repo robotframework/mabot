@@ -41,7 +41,7 @@ class AbstractTkDialog(Toplevel):
     def body(self, master):
         # create dialog body. return widget that should have
         # initial focus.
-        raise Exception('Abstrack method. This should be overritten!')
+        raise Exception('Abstract method. This should be overwritten!')
 
     def buttonbox(self):
         # add standard button box. override if you don't want the
@@ -74,8 +74,8 @@ class AbstractTkDialog(Toplevel):
         # command hooks
     
     def validate(self):
-        raise Exception('Abstrack method. This should be overritten!')
+        raise Exception('Abstract method. This should be overwritten!')
         return 1 # override
 
     def apply(self):
-        raise Exception('Abstrack method. This should be overritten!')
+        raise Exception('Abstract method. This should be overwritten!')
