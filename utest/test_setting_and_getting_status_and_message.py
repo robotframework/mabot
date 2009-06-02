@@ -47,13 +47,12 @@ class TestSettingStatusAndMessage(unittest.TestCase):
     def test_fail_all_with_suite(self):
         self.suite.set_all('FAIL', 'Suite failure')
         self._all_status_should_be(self.suite, 'FAIL')
-        expected_messages = ['Passing', '', 'Failing', 'Suite failure']
+        expected_messages = ['Suite failure\nPassing', 'Suite failure', 
+                             'Suite failure\nFailing', 'Suite failure']
         self._messages_should_be(self.suite.tests, expected_messages)
-        expected_messages[1] = 'Suite failure'
-        self._messages_should_be(self.suite.tests[0].keywords, expected_messages)
-        self._messages_should_be(self.suite.tests[1].keywords, expected_messages)
-        self._messages_should_be(self.suite.tests[2].keywords, expected_messages)
-        self._messages_should_be(self.suite.tests[3].keywords, expected_messages)
+        for i in range(0, 4):
+            self._messages_should_be(self.suite.tests[i].keywords, 
+                                     expected_messages)
 
     def test_fail_all_with_test(self):
         test = self.suite.tests[0]
@@ -66,7 +65,8 @@ class TestSettingStatusAndMessage(unittest.TestCase):
         test = self.suite.tests[0]
         test.set_all('FAIL', 'Test failure')
         self._all_status_should_be(test, 'FAIL')
-        expected_messages = ['Passing', 'Test failure', 'Failing', 'Test failure']
+        expected_messages = ['Test failure\nPassing', 'Test failure', 
+                             'Test failure\nFailing', 'Test failure']
         self._messages_should_be(test.keywords, expected_messages)
 
     def test_suite_is_informed(self):
