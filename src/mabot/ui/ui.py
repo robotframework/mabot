@@ -55,7 +55,7 @@ class SettingsDialog(AbstractTkDialog):
 
     def _remove_tags_matching_additional_tags_prefixes(self, master, row):
         self.remove_additional_tags_prefixes = self._create_radio_buttons(master, 
-            "Remove Tags Matching Additional Tags Prefixes:", 
+            "Remove Tags Matching Additional Tags' Prefixes:", 
             SETTINGS["remove_tags_matching_additional_tags_prefixes"], row)
 
     def _addition_tags_for_executed_test(self, master, row):
@@ -124,30 +124,29 @@ class SettingsDialog(AbstractTkDialog):
         return utils.get_tags_from_string(field.get())
     
     def validate(self):
-        return self.default_message.get(START, END) != ''
+        return True
     
         
 class ChangeStatusDialog(AbstractTkDialog):
 
     def __init__(self, parent):
-        self.message = SETTINGS["default_message"]
-        self.comment = "Give reason for failure:"
-        self.width = 5
-        self.height = 50
         AbstractTkDialog.__init__(self, parent, "Set Failed")
 
     def body(self, master):
-        Label(master, text=self.comment).grid(row=0)
-        self.message_field = Text(master, height=self.height, width=self.width)
-        self.message_field.insert(START, self.message)
-        self.message_field.grid(row=1)
+        Label(master, text="Give reason for failure:").pack(fill=BOTH)
+        scrollbar = Scrollbar(master, orient=VERTICAL)
+        self.message_field = Text(master, yscrollcommand=scrollbar.set)
+        self.message_field.insert(START, SETTINGS["default_message"])
+        scrollbar.config(command=self.message_field.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        self.message_field.pack(fill=BOTH, expand=1)
         return self.message_field # initial focus
 
     def apply(self):
-        self.message = self.message_field.get(START, END)
+        self.message = self.message_field.get(START, END).strip()
     
     def validate(self):
-        return self.message_field.get(START, END) != ''
+        return self.message_field.get(START, END).strip() != ''
 
 
 class RemoveTagsDialog(AbstractTkDialog):
