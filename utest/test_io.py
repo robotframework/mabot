@@ -25,15 +25,6 @@ ROBOT_VERSION = get_version()
 from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
 
-class AskMethodMock:
-    
-    def __init__(self):
-        self.response = None
-        
-    def ask(self):
-        if self.response is None:
-            raise AssertionError("No response set. Should not ask response?")
-        return self.response
     
 DATA_FOLDER = normcase(join(dirname(__file__), 'data',))
 SUITES_FOLDER = join(DATA_FOLDER, 'suites')
@@ -53,12 +44,12 @@ VALID_HTML_INVALID_XML_XML = join(DATA_FOLDER, 'valid_html_invalid_xml.xml')
 HTML_DATASOURCE_WITH_UPDATES = join(DATA_FOLDER, 'html_with_updates.html')
 SAME_TEST_NAME = join(DATA_FOLDER, 'same_test_name.html')
 
+
 class _TestIO(unittest.TestCase):
 
     def setUp(self):
         self.orig_settings = copy.deepcopy(io.SETTINGS)
-        self.ask_method_mock = AskMethodMock()
-        self.io = io.IO(self.ask_method_mock.ask)
+        self.io = io.IO()
 
     def tearDown(self):
         DATA_MODIFIED.saved()

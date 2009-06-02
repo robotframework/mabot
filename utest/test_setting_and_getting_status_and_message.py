@@ -20,23 +20,13 @@ from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
 
 
-class AskMethodMock:
-    
-    def __init__(self):
-        self.response = None
-        
-    def ask(self):
-        if self.response is None:
-            raise AssertionError("No response set. Should not ask response?")
-        return self.response
-    
 DATA = os.path.join(os.path.dirname(__file__), 'data', 'testcases.xml')
+
 
 class TestSettingStatusAndMessage(unittest.TestCase):
     
     def setUp(self):
-        self.ask_method_mock = AskMethodMock()
-        self.io = io.IO(self.ask_method_mock.ask)
+        self.io = io.IO()
         self.suite = self.io.load_data(DATA)
         
     def tearDown(self):
@@ -172,8 +162,7 @@ class TestSettingStatusAndMessage(unittest.TestCase):
 class TestGetExecutionStatus(unittest.TestCase):
     
     def setUp(self):
-        self.ask_method_mock = AskMethodMock()
-        self.io = io.IO(self.ask_method_mock.ask)
+        self.io = io.IO()
         self.suite = self.io.load_data(DATA)
         
     def tearDown(self):

@@ -73,7 +73,7 @@ class TestSettings(unittest.TestCase):
     def test_update_settings_affects_suite_when_default_message_is_not_changed(self):
         defaults = {'default_message':"Not Executed!"}
         self.settings.update_settings(defaults, self.suite)
-        self.assertEquals(self.suite.called, [])
+        self.assertEquals(self.suite.called, [('Not Executed!', 'Not Executed!')])
         
     def test_update_settings_affects_suite_when_default_message_is_changed(self):
         not_defaults = {'default_message':"New"}

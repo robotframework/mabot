@@ -26,7 +26,7 @@ class _TestAddingData(unittest.TestCase):
 
     def setUp(self):
         data = normcase(join(dirname(__file__), 'data', 'root_suite'))
-        self.suite = IO(lambda x: x).load_data(data)
+        self.suite = IO().load_data(data)
         self.other_suite = deepcopy(self.suite)        
         self.test = self.suite.suites[1].tests[0]
         self.other_test = deepcopy(self.test)
@@ -426,7 +426,7 @@ class TestGettingTags(unittest.TestCase):
 
     def setUp(self):
         data = normcase(join(dirname(__file__), 'data', 'root_suite'))
-        self.suite = IO(lambda x: x).load_data(data)
+        self.suite = IO().load_data(data)
     
     def test_getting_tags_from_test_with_tags_and_tags_empty(self):
         test = self.suite.suites[0].tests[0]
