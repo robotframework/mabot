@@ -188,10 +188,6 @@ class Mabot:
         self.node.expand()
         self._active_node = self.node
 
-    def _set_status_passed(self, all=False):
-        self._set_status('PASS', all=all)
-        self.current_editor.update()
-        
     def _set_status_failed(self, all=False):
         dialog = ChangeStatusDialog(self.root)
         if dialog.pressed == 'OK':
@@ -205,10 +201,6 @@ class Mabot:
             self._active_node.item.model_item.update_status_and_message(status, message)
         self.node.update()
         self.current_editor.update()
-            
-    
-        self._statusbar_right.configure(text=message)
-        
             
     def _add_tag(self, event=None):
         if self._active_node.item.model_item.is_keyword():
@@ -376,8 +368,8 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
     def _create_tools_menu(self, menubar):
         toolsmenu = Menu(menubar, tearoff=0)
         toolsmenu.add_command(label="Set All Passed  Ctrl+P", 
-                              command=lambda: self._set_status_passed(all=True))
-        self.root.bind("<Control-p>", lambda x: self._set_status_passed(all=True))        
+                              command=lambda: self._set_status('PASS', all=True))
+        self.root.bind("<Control-p>", lambda x: self._set_status('PASS', all=True))        
         toolsmenu.add_command(label='Set All Failed  Ctrl+F', 
                               command=lambda: self._set_status_failed(all=True))
         self.root.bind("<Control-f>", lambda x: self._set_status_failed(all=True))        
