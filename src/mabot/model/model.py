@@ -139,6 +139,8 @@ class AbstractManualModel:
         if message is not None:
             if override_default or self.message == self._get_default_message():
                 self.set_message(message)
+            else:
+                self.set_message('%s\n%s' % (message, self.message))
             
     def _mark_data_modified(self, update_starttime=True):
         DATA_MODIFIED.modified()
