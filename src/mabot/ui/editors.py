@@ -103,8 +103,7 @@ class AbstractEditor:
 
     def _save_message(self, event):
         self._model_item.set_message(self._get_message())
-        self.update(update_message=False
-                    )
+        self.update(update_message=False)
             
     def update(self, update_message=True):
         if update_message:
@@ -123,6 +122,7 @@ class AbstractEditor:
         return self._message_field.get(START, END)
         
     def close(self):
+        self._save_message(None)
         self._editor.destroy()
 
 class TitleLabel(Label):
@@ -207,7 +207,9 @@ class SuiteEditor(AbstractEditor):
         self._message_field = DataLabel(row, self._model_item.get_full_message())
         row.pack(fill='both')
 
-    def update(self):
+    def update(self, update_message=True):
+        if not update_message:
+            return 
         self._message_field.update_field(self._model_item.message)
         self._status_field.configure(foreground=get_status_color(self._model_item))
         self._status_field.update_field(self._model_item.status)
