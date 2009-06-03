@@ -214,6 +214,9 @@ class SuiteEditor(AbstractEditor):
         self._status_field.configure(foreground=get_status_color(self._model_item))
         self._status_field.update_field(self._model_item.status)
 
+    def close(self):
+        self._editor.destroy()
+
         
 class TestEditor(AbstractEditor):
 
