@@ -124,6 +124,7 @@ class Mabot:
     
     def _create_visibility_selection(self, master):
         tag_selection_frame = CommonFrame(master)
+        Label(tag_selection_frame, text="Tag Filter:", background='white').pack(side=LEFT)
         self._create_pattern_field(tag_selection_frame)
         self._create_tag_selection(tag_selection_frame)
         self._update_visibility()
