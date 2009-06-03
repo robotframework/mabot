@@ -45,7 +45,7 @@ class Mabot:
         self.suite = self.io.load_data(None)
         self._create_ui()
         self._load_data_and_update_ui(datasource)
-        self._ask_additional_tags()
+        self._ask_tags_added_to_modified_tests()
         self.root.mainloop()
 
     def _save_options(self, options):
@@ -83,13 +83,13 @@ class Mabot:
         self._init_tree_view()
         self._create_new_editor()
 
-    def _ask_additional_tags(self):
-        if SETTINGS['ask_additional_tags_at_startup']:
+    def _ask_tags_added_to_modified_tests(self):
+        if SETTINGS['ask_tags_added_to_modified_tests_at_startup']:
             prompt = "Give tag(s) that you want to add to all the test cases\n"\
                      "you are going to report (i.e. env-x, build-y):"
             tags = tkSimpleDialog.askstring("Additional Tags", prompt,
-                            initialvalue=', '.join(SETTINGS['additional_tags']))
-            SETTINGS['additional_tags'] = utils.get_tags_from_string(tags)
+                            initialvalue=', '.join(SETTINGS['tags_added_to_modified_tests']))
+            SETTINGS['tags_added_to_modified_tests'] = utils.get_tags_from_string(tags)
             SETTINGS.save()
 
     def _create_root(self):

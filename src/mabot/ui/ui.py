@@ -30,7 +30,7 @@ class SettingsDialog(AbstractTkDialog):
     
     def body(self, master):
         self._default_message(master, 0)
-        self._ask_additional_tags_at_startup(master, 1)
+        self._ask_tags_added_to_modified_tests_at_startup(master, 1)
         self._addition_tags_for_executed_test(master, 2)
         self._tags_allowed_only_once(master, 3)
         self._info_label(master, 4)
@@ -49,21 +49,21 @@ class SettingsDialog(AbstractTkDialog):
         self.default_message.insert(START, SETTINGS["default_message"])
         self.default_message.grid(row=row, column=1)
 
-    def _ask_additional_tags_at_startup(self, master, row):
-        self.ask_additional_tags_at_startup = self._create_radio_buttons(master, 
-            "Ask Additional Tags at Start Up:", SETTINGS["ask_additional_tags_at_startup"], row)
+    def _ask_tags_added_to_modified_tests_at_startup(self, master, row):
+        self.ask_tags_added_to_modified_tests_at_startup = self._create_radio_buttons(master, 
+            "Ask Tags Added to Modified Tests at Start Up:", SETTINGS["ask_tags_added_to_modified_tests_at_startup"], row)
 
     def _tags_allowed_only_once(self, master, row):
         self.tags_allowed_only_once = self._create_entry(master, "Tags allowed only once (i.e. executed-by-, build-):", 
                                                 ', '.join(SETTINGS["tags_allowed_only_once"]), row)
 
     def _addition_tags_for_executed_test(self, master, row):
-        self.addition_tags = self._create_entry(master, "Additional Tags (i.e. executed-by-x, build-y):", 
-                                                ', '.join(SETTINGS["additional_tags"]), row)
+        self.addition_tags = self._create_entry(master, "Tags Added to Modified Tests (i.e. executed-by-x, build-y):", 
+                                                ', '.join(SETTINGS["tags_added_to_modified_tests"]), row)
 
     def _always_load_old_data_from_xml(self, master, row):
         self.always_load_old_data_from_xml = self._create_radio_buttons(master, 
-            "Always Load Old Data from Xml:", SETTINGS["always_load_old_data_from_xml"], row)
+            "Always Load Old Data from XML:", SETTINGS["always_load_old_data_from_xml"], row)
     
     def _check_simultaneous_save(self, master, row):
         self.check_simultaneous_save = self._create_radio_buttons(master, 
@@ -99,17 +99,17 @@ class SettingsDialog(AbstractTkDialog):
         return entry
     
     def apply(self):
-        ask_additional_tags = self._get_boolean(self.ask_additional_tags_at_startup)
-        additional_tags = self._get_tags(self.addition_tags)
+        ask_tags_added_to_modified_tests = self._get_boolean(self.ask_tags_added_to_modified_tests_at_startup)
+        tags_added_to_modified_tests = self._get_tags(self.addition_tags)
         tags_allowed_only_once = self._get_tags(self.tags_allowed_only_once)
         load_always = self._get_boolean(self.always_load_old_data_from_xml)
         check_simultaneous = self._get_boolean(self.check_simultaneous_save)
         include = self._get_tags(self.include)
         exclude = self._get_tags(self.exclude)
         self.new_settings = {"default_message":self.default_message.get(START, END).strip(),
-                            "ask_additional_tags_at_startup":ask_additional_tags, 
+                            "ask_tags_added_to_modified_tests_at_startup":ask_tags_added_to_modified_tests, 
                             "tags_allowed_only_once":tags_allowed_only_once,
-                            "additional_tags":additional_tags,
+                            "tags_added_to_modified_tests":tags_added_to_modified_tests,
                             "always_load_old_data_from_xml":load_always,
                             "check_simultaneous_save":check_simultaneous,
                             "include":include,

@@ -144,14 +144,14 @@ class TestMarkDataModified(_TestAddAndRemoveTags):
 
     def setUp(self):
         _TestAddAndRemoveTags.setUp(self)
-        model.SETTINGS["additional_tags"] = ['foo', 'tag-1']
+        model.SETTINGS["tags_added_to_modified_tests"] = ['foo', 'tag-1']
         self.test.tags = ['bar']
 
-    def test_if_test_is_executed_additional_tags_are_added(self):        
+    def test_if_test_is_executed_tags_added_to_modified_tests_are_added(self):        
         self.test._mark_data_modified(executed=True)
         self.assertEquals(self.test.tags, ['bar', 'foo', 'tag-1'])
 
-    def test_if_test_is_not_executed_additional_tags_are_not_added(self):
+    def test_if_test_is_not_executed_tags_added_to_modified_tests_are_not_added(self):
         self.test._mark_data_modified(executed=False)
         self.assertEquals(self.test.tags, ['bar'])
 

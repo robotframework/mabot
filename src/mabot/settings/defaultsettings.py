@@ -14,8 +14,8 @@
 
 
 default_message = "Not Executed!"
-ask_additional_tags_at_startup = False
-additional_tags = []
+ask_tags_added_to_modified_tests_at_startup = False
+tags_added_to_modified_tests = []
 tags_allowed_only_once = []
 always_load_old_data_from_xml = False
 check_simultaneous_save = False

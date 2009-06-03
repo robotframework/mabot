@@ -434,7 +434,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def _mark_data_modified(self, executed=True):
         AbstractManualModel._mark_data_modified(self)
         if executed:
-            self.add_tags(SETTINGS["additional_tags"], mark_modified=False)
+            self.add_tags(SETTINGS["tags_added_to_modified_tests"], mark_modified=False)
 
         
     def _get_items(self):
