@@ -202,16 +202,18 @@ class Mabot:
         self.node.update()
         self.current_editor.update()
             
-    def _add_tag(self, event=None):
+    def _add_tags(self, event=None):
         if self._active_node.item.model_item.is_keyword():
-            self._statusbar_right.configure(text=
-                            "No test suite or test case selected")
+            self._statusbar("No test suite or test case selected")
         else:
             tags = tkSimpleDialog.askstring('Add Tags', 
                             "Add tags (separated with ', ' i.e. tag-1, tag-2)")
-            self._add_new_tags(tags)
+            tags = utils.get_tags_from_string(tags)
+            self._active_node.item.model_item.add_tags(tags)
+            self._create_new_editor()
+            self._update_visibility()
 
-    def _remove_tag(self, event=None):
+    def _remove_tags(self, event=None):
         if self._active_node.item.model_item.is_keyword():
             self._statusbar_right.configure(text=
                             "No test suite or test case selected")
@@ -222,15 +224,8 @@ class Mabot:
                 self._remove_old_tag(dialog.tags)
             dialog.destroy()
     
-    def _add_new_tags(self, tags):
-        for tag in utils.get_tags_from_string(tags):
-            self._active_node.item.model_item.add_tag(tag)
-        self._create_new_editor()
-        self._update_visibility()
-
     def _remove_old_tag(self, tags):
-        for tag in tags:
-            self._active_node.item.model_item.remove_tag(tag)
+        self._active_node.item.model_item.remove_tags(tags)
         self._create_new_editor()
         self._update_visibility()
             
@@ -373,10 +368,12 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
         toolsmenu.add_command(label='Set All Failed  Ctrl+F', 
                               command=lambda: self._set_status_failed(all=True))
         self.root.bind("<Control-f>", lambda x: self._set_status_failed(all=True))        
-        toolsmenu.add_command(label='Add Tag     Ctrl+A', command=self._add_tag)
-        self.root.bind("<Control-a>", self._add_tag)        
-        toolsmenu.add_command(label='Remove Tag     Ctrl+R', command=self._remove_tag)
-        self.root.bind("<Control-r>", self._remove_tag)
+        toolsmenu.add_command(label='Add Tags     Ctrl+A', 
+                              command=self._add_tags)
+        self.root.bind("<Control-a>", self._add_tags)        
+        toolsmenu.add_command(label='Remove Tags     Ctrl+R', 
+                              command=self._remove_tags)
+        self.root.bind("<Control-r>", self._remove_tags)
         menubar.add_cascade(label="Tools", menu=toolsmenu)
 
     def _create_help_menu(self, menubar):

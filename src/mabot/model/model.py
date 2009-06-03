@@ -129,6 +129,7 @@ class AbstractManualModel:
         if self.message != message:
             self.message = message
             self._mark_data_modified()
+            self._update_parent()
     
     def _set_status_and_message(self, status, message=None, override_default=True):
         if not self.visible:
@@ -359,17 +360,17 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
                 return True
         return False            
 
-    def add_tag(self, tag):
+    def add_tags(self, tags):
         if not self.visible:
             return
         for item in self._get_items():
-            item.add_tag(tag)
+            item.add_tags(tags)
 
-    def remove_tag(self, tag):
+    def remove_tags(self, tags):
         if not self.visible:
             return
         for item in self._get_items():
-            item.remove_tag(tag)
+            item.remove_tags(tags)
     
     def update_default_message(self, old_default, new_default):
         if old_default.strip() == new_default.strip():
@@ -433,31 +434,9 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def _mark_data_modified(self, executed=True):
         AbstractManualModel._mark_data_modified(self)
         if executed:
-            self._remove_tags_matching_additional_tag_prefixes()
-            self._add_additional_tags()
+            self.add_tags(SETTINGS["additional_tags"], mark_modified=False)
 
-    def _remove_tags_matching_additional_tag_prefixes(self):
-        prefixes = self._get_prefixes(SETTINGS["additional_tags"])
-        remove_tags = []
-        for tag in self.tags:
-            for prefix in prefixes:
-                if tag.startswith(prefix):
-                    remove_tags.append(tag)
-        for tag in remove_tags:
-            self.tags.remove(tag)
         
-    def _get_prefixes(self, tags):
-        prefixes = []
-        for tag in tags:
-            if '-' in tag:
-                prefix = tag[:tag.rfind('-')+1]
-                prefixes.append(prefix)
-        return prefixes
-            
-    def _add_additional_tags(self):
-        for tag in SETTINGS["additional_tags"]:
-            self.add_tag(tag, mark_modified=False)
-            
     def _get_items(self):
         return self.keywords
 
@@ -529,21 +508,38 @@ Do you want your changes to be overridden?"""
                 self._mark_data_modified(False)
         self.tags = sorted(tags)
 
-    def add_tag(self, tag, mark_modified=True):
+    def add_tags(self, tags, mark_modified=True):
         if not self.visible:
             return
+        for tag in tags:
+            self._add_tag(tag, mark_modified)
+        self.tags.sort()
+
+    def _add_tag(self, tag, mark_modified):
         if not tag in self.tags:
+            self._remove_related_tags_if_allowed_only_once(tag)
             self.tags.append(tag)
-            self.tags.sort()
             if mark_modified:
-                self._mark_data_modified(False)
-             
-    def remove_tag(self, tag):
+                self._mark_data_modified(executed=False)
+
+    def _remove_related_tags_if_allowed_only_once(self, tag):
+        for prefix in SETTINGS["tags_allowed_only_once"]:
+            if tag.startswith(prefix):
+                self._remove_tags_matching_prefix(prefix)
+            
+    def _remove_tags_matching_prefix(self, prefix):
+        self.remove_tags([tag for tag in self.tags if tag.startswith(prefix)])
+
+    def remove_tags(self, tags):
         if not self.visible:
             return
+        for tag in tags:
+            self._remove_tag(tag)
+
+    def _remove_tag(self, tag):
         if tag in self.tags:
             self.tags.remove(tag)
-            self._mark_data_modified(False)
+            self._mark_data_modified(executed=False)
             
     def update_default_message(self, old_default, new_default):
         if self.message == old_default:
