@@ -179,8 +179,7 @@ class TestRFSettings(unittest.TestCase):
         self.settings.update({'foo':'new value'})
         expected = {'foo':'new value', 'hello':'world'}
         self.assertEquals(self.settings._settings, expected)
-        saved_settings = self._read_settings()
-        self.assertEquals(self.settings._settings, saved_settings)
+        self.assertEquals(self._read_settings(), expected)
     
     def test_updating_settings_with_module(self):
         defaults = {'foo':'bar', 'hello':'world'}
@@ -191,6 +190,19 @@ class TestRFSettings(unittest.TestCase):
         self.assertEquals(self.settings._settings, defaults)
         self.settings.update(self.settings_file)
         self.assertEquals(self.settings._settings, expected)
+        self.assertEquals(self._read_settings(), expected)
+
+    def test_updating_settings_with_module_and_not_saving(self):
+        defaults = {'foo':'bar', 'hello':'world'}
+        self.settings = RFSettings(path=self.settings_file, 
+                                   defaults=defaults)
+        
+        self._write_settings({'foo':'new value'})
+        expected = {'foo':'new value', 'hello':'world'}
+        self.assertEquals(self.settings._settings, defaults)
+        self.settings.update(self.settings_file, save=False)
+        self.assertEquals(self.settings._settings, expected)
+        self.assertEquals(self._read_settings(), {'foo':'new value'})
 
     def test_updating_settings_with_none(self):
         defaults = {'foo':'bar', 'hello':'world'}

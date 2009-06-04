@@ -124,7 +124,7 @@ class RFSettings(SettingsIO):
                     self._settings[key] = settings[key]
         else:
             try:
-                self.update(SettingsIO(path=settings).read())
+                self.update(SettingsIO(path=settings).read(), save)
             except (MissingSettings, InvalidSettings), error:
                 self._logger(error.message)
         if save:
