@@ -29,18 +29,28 @@ class SettingsDialog(AbstractTkDialog):
         AbstractTkDialog.__init__(self, parent, title)
     
     def body(self, master):
-        self._default_message(master, 0)
-        self._ask_tags_added_to_modified_tests_at_startup(master, 1)
-        self._addition_tags_for_executed_test(master, 2)
-        self._tags_allowed_only_once(master, 3)
-        self._info_label(master, 4)
-        self._always_load_old_data_from_xml(master, 5)
-        self._check_simultaneous_save(master, 6)
-        self._include(master, 7)
-        self._exclude(master, 8)
+        methods = [ self._default_message,
+                    self._ask_tags_added_to_modified_tests_at_startup,
+                    self._tag_info_label,
+                    self._addition_tags_for_executed_test,
+                    self._tags_allowed_only_once,
+                    self._info_label,
+                    self._always_load_old_data_from_xml,
+                    self._check_simultaneous_save,
+                    self._include,
+                    self._exclude ]
+        for index, method in enumerate(methods):
+            method(master, index)
 
     def _info_label(self, master, row):
         text = "\nSettings below will affect after loading new data\n"
+        self._label(master, row, text)
+
+    def _tag_info_label(self, master, row):
+        text = "Note: In all tag related settings separator is comma and space ', '."
+        self._label(master, row, text)
+
+    def _label(self, master, row, text):
         Label(master, text=text).grid(row=row, column=0, sticky='NW')
         
     def _default_message(self, master, row):
@@ -53,13 +63,13 @@ class SettingsDialog(AbstractTkDialog):
         self.ask_tags_added_to_modified_tests_at_startup = self._create_radio_buttons(master, 
             "Ask Tags Added to Modified Tests at Start Up:", SETTINGS["ask_tags_added_to_modified_tests_at_startup"], row)
 
-    def _tags_allowed_only_once(self, master, row):
-        self.tags_allowed_only_once = self._create_entry(master, "Tags allowed only once (i.e. executed-by-, build-):", 
-                                                ', '.join(SETTINGS["tags_allowed_only_once"]), row)
-
     def _addition_tags_for_executed_test(self, master, row):
         self.addition_tags = self._create_entry(master, "Tags Added to Modified Tests (i.e. executed-by-x, build-y):", 
                                                 ', '.join(SETTINGS["tags_added_to_modified_tests"]), row)
+
+    def _tags_allowed_only_once(self, master, row):
+        self.tags_allowed_only_once = self._create_entry(master, "Tags allowed only once (i.e. executed-by-, build-):", 
+                                                ', '.join(SETTINGS["tags_allowed_only_once"]), row)
 
     def _always_load_old_data_from_xml(self, master, row):
         self.always_load_old_data_from_xml = self._create_radio_buttons(master, 
@@ -80,7 +90,7 @@ class SettingsDialog(AbstractTkDialog):
                                           ', '.join(SETTINGS["exclude"]), row)
 
     def _create_radio_buttons(self, master, title, value, row):
-        Label(master, text=title).grid(row=row, column=0, sticky=NW)
+        self._label(master, row, title)
         variable = StringVar()
         variable.set(value)
         radio_buttons_container = CommonFrame(master)
@@ -92,7 +102,7 @@ class SettingsDialog(AbstractTkDialog):
         return variable
 
     def _create_entry(self, master, header, value, row):
-        Label(master, text=header).grid(row=row, column=0, sticky=NW)
+        self._label(master, row, header)
         entry = Entry(master, width=50)
         entry.insert(0, value)
         entry.grid(row=row, column=1)
