@@ -111,6 +111,7 @@ class AbstractManualModel:
         
         Works also with changes done to Robot Framework 2.0.3.
         """
+        #TODO: Move to robotapi
         status = getattr(item, 'status', 'FAIL')
         return status == 'PASS' and 'PASS' or 'FAIL'
         
@@ -434,8 +435,11 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def _mark_data_modified(self, executed=True):
         AbstractManualModel._mark_data_modified(self)
         if executed:
-            self.add_tags(SETTINGS["tags_added_to_modified_tests"], mark_modified=False)
-
+            self._add_tags_added_to_modified_tests(mark_modified=False)
+    
+    def _add_tags_added_to_modified_tests(self, mark_modified):
+        self.add_tags(SETTINGS["tags_added_to_modified_tests"], 
+                      mark_modified=mark_modified)
         
     def _get_items(self):
         return self.keywords
@@ -559,6 +563,11 @@ Do you want your changes to be overridden?"""
         else:
             self.visible = False
         return self.visible
+
+    def _child_status_updated(self):
+        self._add_tags_added_to_modified_tests(mark_modified=True)
+        AbstractManualTestOrKeyword._child_status_updated(self)
+
 
 class ManualKeyword (AbstractManualTestOrKeyword):
 

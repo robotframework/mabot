@@ -26,7 +26,7 @@ class _TestAddAndRemoveTags(unittest.TestCase):
     def setUp(self):
         data = normcase(join(dirname(__file__), 'data', 'root_suite'))
         self.suite = IO().load_data(data)
-        self.test = self.suite.suites[0].tests[0]
+        self.test = self.suite.suites[1].tests[0]
         self.orig_settings = deepcopy(model.SETTINGS)
         
     def tearDown(self):
@@ -140,21 +140,42 @@ class TestRemovingTags(_TestAddAndRemoveTags):
         self.assertFalse(self.test.is_modified)
 
 
-class TestMarkDataModified(_TestAddAndRemoveTags):
+class TestTagsAddedToModifiedTests(_TestAddAndRemoveTags):
 
     def setUp(self):
         _TestAddAndRemoveTags.setUp(self)
-        model.SETTINGS["tags_added_to_modified_tests"] = ['foo', 'tag-1']
+        model.SETTINGS['tags_added_to_modified_tests'] = ['foo', 'tag-1']
         self.test.tags = ['bar']
+        self.kw = self.test.keywords[0].keywords[0]
 
-    def test_if_test_is_executed_tags_added_to_modified_tests_are_added(self):        
+    def test_if_test_is_executed_tags_are_added(self):        
         self.test._mark_data_modified(executed=True)
-        self.assertEquals(self.test.tags, ['bar', 'foo', 'tag-1'])
+        self._tags_are_added_to_test()
 
-    def test_if_test_is_not_executed_tags_added_to_modified_tests_are_not_added(self):
+    def test_if_test_is_not_executed_tags_are_not_added(self):
         self.test._mark_data_modified(executed=False)
         self.assertEquals(self.test.tags, ['bar'])
+        self.assertTrue(self.test.is_modified)
 
+    def test_if_keyword_message_is_changed_tags_are_added(self):                
+        self.kw.set_message('New message')
+        self._tags_are_added_to_test()
+
+    def test_if_only_keyword_message_and_not_status_is_changed_tags_are_added(self):                
+        self.kw.update_status_and_message(message='New message')
+        self._tags_are_added_to_test()
+
+    def test_if_keyword_status_is_changed_tags_are_added(self):
+        self.kw.update_status_and_message(status='PASS')
+        self._tags_are_added_to_test()
+
+    def test_if_keyword_status_and_message_are_changed_tags_are_added(self):
+        self.kw.update_status_and_message(status='PASS', message='New message')
+        self._tags_are_added_to_test()
+
+    def _tags_are_added_to_test(self):
+        self.assertEquals(self.test.tags, ['bar', 'foo', 'tag-1'])
+        self.assertTrue(self.test.is_modified)
 
 if __name__ == "__main__":
     unittest.main()
