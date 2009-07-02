@@ -289,8 +289,8 @@ class Mabot:
 
     def _continue_without_saving(self):
         return not DATA_MODIFIED.is_modified() or \
-            tkMessageBox.askyesno("Unsaved data", 
-                    "Data is not Saved!\n Continue?")
+            tkMessageBox.askyesno("Unsaved changes", 
+                    "You have unsaved changes.\nDo you still want to exit?")
 
     def _edit_settings(self):
         settings_dialog = SettingsDialog(self.root, "Settings")
