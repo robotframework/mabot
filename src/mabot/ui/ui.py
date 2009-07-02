@@ -41,7 +41,7 @@ class SettingsDialog(AbstractTkDialog):
 
     def _info_label(self, master, row):
         text = "\nSettings below will affect after loading new data\n"
-        Label(master, text=text).grid(row=row, column=0)
+        Label(master, text=text).grid(row=row, column=0, sticky='NW')
         
     def _default_message(self, master, row):
         Label(master, text="Default Message:").grid(row=row, column=0, sticky=NW)
