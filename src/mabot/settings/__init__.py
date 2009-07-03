@@ -28,8 +28,8 @@ class Settings(RFSettings):
                                               'defaultsettings.py')
         self.project_settings = os.path.join(os.path.dirname(__file__), 
                                               'projectsettings.py')
-        defaults = RFSettings(path=self.defaults_settings, 
-                              defaults=self.project_settings)._settings
+        defaults = RFSettings(path=self.project_settings, 
+                              defaults=self.defaults_settings)._settings
         if path:
             RFSettings.__init__(self, path=path, defaults=defaults)
         else:

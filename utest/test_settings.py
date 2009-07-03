@@ -19,8 +19,7 @@ import os.path
 from mabot.settings import Settings, defaultsettings
 from mabot.settings.utils import SettingsIO
 
-        
-class TestSettings(unittest.TestCase):
+class _TestSettings(unittest.TestCase):
 
     def setUp(self):
         self.path = os.path.join(os.path.dirname(__file__), 'data', 
@@ -32,8 +31,19 @@ class TestSettings(unittest.TestCase):
     def tearDown(self):
         self._remove_settings()
 
+    def _read_settings_from_file(self, path=None):
+        if path:
+            return SettingsIO(path=path).read()
+        return SettingsIO(path=self.path).read()
+
+    def _remove_settings(self):
+        if os.path.exists(self.path):
+            os.remove(self.path)
+
+        
+class TestSettings(_TestSettings):
+
     def test_loading_default_settings(self):
-        expected = self.settings._settings.copy()
         expected = self._read_settings_from_file(defaultsettings.__file__[:-1])
         self.assertEquals(self.settings._settings, expected)
         self.assertEquals(self.settings._settings["include"], [])
@@ -80,14 +90,37 @@ class TestSettings(unittest.TestCase):
         self.settings.update_settings(not_defaults, self.suite)
         self.assertEquals(self.suite.called, [('Not Executed!', 'New')])
 
-    def _read_settings_from_file(self, path=None):
-        if path:
-            return SettingsIO(path=path).read()
-        return SettingsIO(path=self.path).read()
 
-    def _remove_settings(self):
-        if os.path.exists(self.path):
-            os.remove(self.path)
+class TestProjectSettings(_TestSettings):
+
+    def setUp(self):
+        _TestSettings.setUp(self)
+        self.project_settings = os.path.join(os.path.dirname(defaultsettings.__file__),
+                                             'projectsettings.py')
+    
+    def test_partial_project_settings_are_read(self):
+        self._set_to_projectsettings("default_message = 'new value'")
+        self.settings = Settings(self.path)
+        self.assertEquals(self.settings["default_message"], 'new value')
+
+    def test_all_settings_set_in_project_settings_are_taken_into_use(self):
+        names = self.settings._settings.keys()
+        content = '\n'.join([name + " = 'new'" for name in names ])
+        self._set_to_projectsettings(content)
+        self.settings = Settings(self.path)
+        for name in names:
+            self.assertEquals(self.settings[name], 'new')
+    
+    def _set_to_projectsettings(self, content):
+        f = open(self.project_settings, 'w')
+        f.write(content)
+        f.close()
+    
+    def tearDown(self):
+        if os.path.exists(self.project_settings):
+            os.remove(self.project_settings)
+        _TestSettings.tearDown(self)
+            
 
 class Suite:
     
