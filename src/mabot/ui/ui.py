@@ -127,10 +127,7 @@ class SettingsDialog(AbstractTkDialog):
                             }
 
     def _get_boolean(self, item):
-        value = item.get()
-        if value == "True" or value == "1":
-            return True
-        return False
+        return item.get() in ["True", "1"]
 
     def _get_tags(self, field):
         return utils.get_tags_from_string(field.get())
