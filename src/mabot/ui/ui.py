@@ -91,7 +91,7 @@ class SettingsDialog(AbstractTkDialog):
 
     def _create_radio_buttons(self, master, title, value, row):
         self._label(master, row, title)
-        variable = StringVar()
+        variable = BooleanVar()
         variable.set(value)
         radio_buttons_container = CommonFrame(master)
         radio_buttons_container.grid(row=row, column=1, sticky=W)
@@ -109,11 +109,11 @@ class SettingsDialog(AbstractTkDialog):
         return entry
     
     def apply(self):
-        ask_tags_added_to_modified_tests = self._get_boolean(self.ask_tags_added_to_modified_tests_at_startup)
+        ask_tags_added_to_modified_tests = self.ask_tags_added_to_modified_tests_at_startup.get()
         tags_added_to_modified_tests = self._get_tags(self.addition_tags)
         tags_allowed_only_once = self._get_tags(self.tags_allowed_only_once)
-        load_always = self._get_boolean(self.always_load_old_data_from_xml)
-        check_simultaneous = self._get_boolean(self.check_simultaneous_save)
+        load_always = self.always_load_old_data_from_xml.get()
+        check_simultaneous = self.check_simultaneous_save.get()
         include = self._get_tags(self.include)
         exclude = self._get_tags(self.exclude)
         self.new_settings = {"default_message":self.default_message.get(START, END).strip(),
@@ -125,9 +125,6 @@ class SettingsDialog(AbstractTkDialog):
                             "include":include,
                             "exclude":exclude,
                             }
-
-    def _get_boolean(self, item):
-        return item.get() in ["True", "1"]
 
     def _get_tags(self, field):
         return utils.get_tags_from_string(field.get())
