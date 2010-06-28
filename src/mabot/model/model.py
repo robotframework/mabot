@@ -191,10 +191,13 @@ class AbstractManualModel:
     def is_keyword(self):
         return isinstance(self, ManualKeyword)
 
-    def _get_keyword(self, kw, from_xml):
+    def _get_fixture_keyword(self, kw, from_xml):
+        if not from_xml:
+            kw = kw._keyword
         if kw:
             return ManualKeyword(kw, self, from_xml)
         return None
+
 
 class AbstractManualTestOrKeyword(AbstractManualModel):
 
@@ -269,8 +272,8 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         self.critical = suite.critical
         self.critical_stats = suite.critical_stats
         self.all_stats = suite.all_stats
-        self.setup = self._get_keyword(suite.setup, from_xml)
-        self.teardown = self._get_keyword(suite.teardown, from_xml)
+        self.setup = self._get_fixture_keyword(suite.setup, from_xml)
+        self.teardown = self._get_fixture_keyword(suite.teardown, from_xml)
         self.suites = [ManualSuite(sub_suite, self, from_xml) for sub_suite in suite.suites]
         self.tests = [ManualTest(test, self, from_xml) for test in suite.tests]
         self._update_status()
@@ -301,10 +304,11 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         robotapi.RunnableTestSuite._add_test_to_stats(self, test)
 
     def _init_data(self, suite):
-        varz = robotapi.Namespace(suite, None).variables
-        suite._init_suite(varz)
+        variables = robotapi.Namespace(suite, None)
+        context = robotapi.ExecutionContext(variables, None)
+        suite._set_variable_dependent_metadata(context)
         for test in suite.tests:
-            test._init_test(varz)
+            test._init_test(context)
         return suite
 
     def _get_items(self):
@@ -422,8 +426,8 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
         if hasattr(test, 'mediumname'):
             self.mediumname = test.mediumname
         self.longname = test.longname
-        self.setup = self._get_keyword(test.setup, from_xml)
-        self.teardown = self._get_keyword(test.teardown, from_xml)
+        self.setup = self._get_fixture_keyword(test.setup, from_xml)
+        self.teardown = self._get_fixture_keyword(test.teardown, from_xml)
         self.tags = test.tags
         self.keywords = [ ManualKeyword(kw, self, from_xml) for kw in test.keywords ]
         self.critical = test.critical
