@@ -13,8 +13,6 @@
 #  limitations under the License.
 
 
-import os.path
-import sys
 import tkMessageBox
 
 from mabot.settings import SETTINGS
