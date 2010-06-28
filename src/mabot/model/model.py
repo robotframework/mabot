@@ -465,7 +465,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def _resolve_keywords_results(self, other):
         try:
             test = self._load_test_from_datasource()
-        except IOError, message:
+        except IOError, error:
             msg = 'Could not check correct model from data source!\n%s'
             tkMessageBox('Loading Data Source Failed', msg % (error))
             return
