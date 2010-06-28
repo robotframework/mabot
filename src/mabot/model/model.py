@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,16 +23,16 @@ from mabot.utils import robotapi
 
 
 class Modified:
-    
+
     def __init__(self):
         self.status = False
-    
+
     def modified(self):
         self.status = True
-    
+
     def saved(self):
         self.status = False
-    
+
     def set(self, status):
         self.status = status
 
@@ -46,35 +46,35 @@ ALL_TAGS_VISIBLE = "ALL MATCHING TAGS VISIBLE"
 
 class EmptySuite:
     """Suite used when initializing the Mabot with no data"""
-    
+
     def __init__(self):
         self.parent = None
         self.doc = self.name = self.starttime = self.endtime = ''
         self.status = self.message = ''
         self.metadata = {}
         self.tests = self.suites = []
-    
+
     def __nonzero__(self):
         return 1
 
     def is_suite(self):
         return True
-    
+
     def __getattr__(self, name):
         return self.do_nothing
-    
+
     def get_execution_status(self):
         return 'PASS'
 
     def do_nothing(self, *args, **kw_args):
         return ""
-    
+
     def get_all_visible_tags(self):
-        return []   
+        return []
 
 
 class UserKeywordLibrary:
-    
+
     def __init__(self):
         self.keywords = {}
 
@@ -90,11 +90,11 @@ class UserKeywordLibrary:
             msg = msg % (kw.name, item.get_parent_testcase().longname, kw._error)
             raise Exception(msg)
         return kw.keywords
-        
 
-KW_LIB = UserKeywordLibrary()        
 
-        
+KW_LIB = UserKeywordLibrary()
+
+
 class AbstractManualModel:
 
     def __init__(self, item, parent=None):
@@ -107,14 +107,14 @@ class AbstractManualModel:
         self.visible = True
 
     def _get_status(self, item):
-        """Gets the status correctly from robot.running and robot.output items. 
-        
+        """Gets the status correctly from robot.running and robot.output items.
+
         Works also with changes done to Robot Framework 2.0.3.
         """
         #TODO: Move to robotapi
         status = getattr(item, 'status', 'FAIL')
         return status == 'PASS' and 'PASS' or 'FAIL'
-        
+
     def set_all(self, status, message=None):
         for item in self._get_items():
             item.set_all(status, message)
@@ -131,10 +131,10 @@ class AbstractManualModel:
             self.message = message
             self._mark_data_modified()
             self._update_parent()
-    
+
     def _set_status_and_message(self, status, message=None, override_default=True):
         if not self.visible:
-            return 
+            return
         if self.status != status:
             self.status = status
             self._mark_data_modified()
@@ -143,13 +143,13 @@ class AbstractManualModel:
                 self.set_message(message)
             else:
                 self.set_message('%s\n%s' % (message, self.message))
-            
+
     def _mark_data_modified(self, update_starttime=True):
         DATA_MODIFIED.modified()
         self.is_modified = True
         if update_starttime:
             self.starttime = robotapi.get_timestamp()
-        
+
     def _update_parent(self):
         if self.parent is not None:
             self.parent._child_status_updated()
@@ -158,12 +158,12 @@ class AbstractManualModel:
         self._update_status()
         if self.parent is not None:
             self.parent._child_status_updated()
-            
+
     def _update_status(self):
         child_statuses = [ item.status for item in self._get_items() ]
         updated_status = 'FAIL' in child_statuses and 'FAIL' or 'PASS'
         self._set_status_and_message(updated_status)
-            
+
     def _save(self, time):
         if self.is_modified:
             self.endtime = time
@@ -235,7 +235,7 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
             if s_value !=  o_value:
                 s_diffs += '%s: %s\n' % (attr.capitalize(), s_value)
                 o_diffs += '%s: %s\n' % (attr.capitalize(), o_value)
-        return s_diffs, o_diffs        
+        return s_diffs, o_diffs
 
     def _saved_after_loading(self, other):
         elapsed = robotapi.get_elapsed_time(self.endtime, other.endtime)
@@ -256,7 +256,7 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
         return 0
 
 class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
-    
+
     def __init__(self, suite, parent=None, from_xml=False):
         if not from_xml:
             KW_LIB.add_suite_keywords(suite)
@@ -282,14 +282,14 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
             self.endtime = suite.endtime
         self.saving = False
         self._check_no_duplicate_tests()
-        
+
     def _check_no_duplicate_tests(self):
         names = [ test.name for test in self.tests ]
         for test in self.tests:
             if names.count(test.name) > 1:
                 msg = "Found test '%s' from suite '%s' %s times.\n"
                 msg += "Mabot supports only unique test case names!"
-                msg = msg % (test.name, self.longname, names.count(test.name)) 
+                msg = msg % (test.name, self.longname, names.count(test.name))
                 raise IOError(msg)
 
     def _update_status(self):
@@ -308,13 +308,13 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         for test in suite.tests:
             test._init_test(varz)
         return suite
-        
+
     def _get_items(self):
         return self.suites + self.tests
 
     def _set_status_and_message(self, status, message=None, override_default=True):
         self._update_status()
-    
+
     def get_execution_status(self):
         updated_status = "PASS"
         for item in self._get_items():
@@ -325,19 +325,19 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
                 if status == "FAIL":
                     updated_status = "FAIL"
         return updated_status
-        
+
     def add_results(self, other, add_from_xml=False, override_method=None):
         if not other or self.name != other.name:
             return None
-        self._add_from_items_to_items(other.suites, self.suites, 
+        self._add_from_items_to_items(other.suites, self.suites,
                                       add_from_xml, override_method)
-        self._add_from_items_to_items(other.tests, self.tests, 
+        self._add_from_items_to_items(other.tests, self.tests,
                                       add_from_xml, override_method)
         if self._has_new_children(other):
-            self._mark_data_modified(False)                        
+            self._mark_data_modified(False)
         self._update_status()
 
-    def _add_from_items_to_items(self, other_items, self_items, 
+    def _add_from_items_to_items(self, other_items, self_items,
                                  add_from_xml, override_method):
         for other_item in other_items:
             if other_item.name in [ i.name for i in self_items ]:
@@ -347,11 +347,11 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
                                           override_method)
                         break
             elif add_from_xml:
-                self_items.append(other_item) 
+                self_items.append(other_item)
             else:
                 # model != XML
-                self._mark_data_modified(False)                           
-    
+                self._mark_data_modified(False)
+
     def _has_new_children(self, other):
         for suite in self.suites:
             if not suite.name in [ s.name for s in other.suites ]:
@@ -359,7 +359,7 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         for test in self.tests:
             if not test.name in [ s.name for s in other.tests ]:
                 return True
-        return False            
+        return False
 
     def add_tags(self, tags):
         if not self.visible:
@@ -372,27 +372,27 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
             return
         for item in self._get_items():
             item.remove_tags(tags)
-    
+
     def update_default_message(self, old_default, new_default):
         if old_default.strip() == new_default.strip():
             return
         for item in self._get_items():
             item.update_default_message(old_default, new_default)
-        
+
     def save(self):
         self._save(robotapi.get_timestamp())
-        
+
     def _save(self, time):
         self.saving = True
         for item in self._get_items():
             item._save(time)
-            
+
     def saved(self):
         self.saving = False
         self._update_status()
         for suite in self.suites:
             suite.saved()
-            
+
     def get_all_visible_tags(self, tags=None):
         if tags is None:
             tags = []
@@ -422,7 +422,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
             self.message = self._get_default_message()
         #TODO: Remove support for 2.0.4 RF
         if hasattr(test, 'mediumname'):
-            self.mediumname = test.mediumname            
+            self.mediumname = test.mediumname
         self.longname = test.longname
         self.setup = self._get_keyword(test.setup, from_xml)
         self.teardown = self._get_keyword(test.teardown, from_xml)
@@ -436,11 +436,11 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
         AbstractManualModel._mark_data_modified(self)
         if executed:
             self._add_tags_added_to_modified_tests(mark_modified=False)
-    
+
     def _add_tags_added_to_modified_tests(self, mark_modified):
-        self.add_tags(SETTINGS["tags_added_to_modified_tests"], 
+        self.add_tags(SETTINGS["tags_added_to_modified_tests"],
                       mark_modified=mark_modified)
-        
+
     def _get_items(self):
         return self.keywords
 
@@ -485,7 +485,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
         suite = ManualSuite(utils.load_data(self.parent.source, SETTINGS))
         for test in suite.tests:
             if test.name == self.name:
-                return test            
+                return test
 
     def _copy_keywords(self, other):
         self.keywords = other.keywords
@@ -502,7 +502,7 @@ Other test information:
 Do you want your changes to be overridden?"""
         message = message % (self.longname, s_diffs, o_diffs)
         return "Conflicting Test Results!", message
-    
+
 
     def _add_loaded_tags(self, other):
         tags = other.tags[:]
@@ -530,7 +530,7 @@ Do you want your changes to be overridden?"""
         for prefix in SETTINGS["tags_allowed_only_once"]:
             if tag.startswith(prefix):
                 self._remove_tags_matching_prefix(prefix)
-            
+
     def _remove_tags_matching_prefix(self, prefix):
         self.remove_tags([tag for tag in self.tags if tag.startswith(prefix)])
 
@@ -544,7 +544,7 @@ Do you want your changes to be overridden?"""
         if tag in self.tags:
             self.tags.remove(tag)
             self._mark_data_modified(executed=False)
-            
+
     def update_default_message(self, old_default, new_default):
         if self.message == old_default:
             self.set_message(new_default)
@@ -555,7 +555,7 @@ Do you want your changes to be overridden?"""
                 if not tag in tags:
                     tags.append(tag)
         return tags
-    
+
     def change_visibility(self, includes, excludes, tag_name):
         if self.is_included(includes, excludes) and \
            (tag_name == ALL_TAGS_VISIBLE or tag_name in self.tags):
@@ -584,12 +584,12 @@ class ManualKeyword (AbstractManualTestOrKeyword):
             else:
                 self.messages = []
                 self.message = self._get_default_message()
-                self.msg_timestamp = self.msg_level = None 
+                self.msg_timestamp = self.msg_level = None
             self.keywords = [ ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords ]
         else:
             self.messages = []
             self.message = ""
-            self.msg_timestamp = self.msg_level = None 
+            self.msg_timestamp = self.msg_level = None
             self.keywords = [ ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self) ]
         self.args = kw.args
         self.type = kw.type
@@ -601,7 +601,7 @@ class ManualKeyword (AbstractManualTestOrKeyword):
             self._add_info_from_other(other)
         self._add_keywords_results(other, add_from_xml, override_method)
 
-    def get_parent_testcase(self): 
+    def get_parent_testcase(self):
         if self.parent.is_test():
             return self.parent
         return self.parent.get_parent_testcase()
@@ -611,15 +611,15 @@ class ManualKeyword (AbstractManualTestOrKeyword):
 
     def _get_items(self):
         return self.keywords
-            
+
     def serialize(self, serializer):
         serializer.start_keyword(self)
         for message in self.messages:
             message.serialize(serializer)
         #TODO: In case there are keywords and messages, the order is not kept in here
         #This can happen when reading XML from (p/j)ybot test execution
-        if self.message: 
-            ManualMessage(self.message, self.status, self.msg_timestamp, 
+        if self.message:
+            ManualMessage(self.message, self.status, self.msg_timestamp,
                           self.msg_level).serialize(serializer)
         for kw in self.keywords:
             kw.serialize(serializer)
@@ -635,13 +635,13 @@ Other keyword information:
 %s
 
 Do you want your changes to be overridden?"""
-        message = message % (self.name, self.get_parent_testcase().longname, 
+        message = message % (self.name, self.get_parent_testcase().longname,
                              self_diffs, other_diffs)
         return "Conflicting Keyword Results!", message
 
 
 class ManualMessage(robotapi.Message):
-    
+
     def __init__(self, message, status, timestamp=None, level=None):
         self.timestamp = timestamp or '00000000 00:00:00.000'
         status_level = status == 'PASS' and 'INFO' or 'FAIL'
