@@ -86,12 +86,12 @@ class TestLoadData(_TestIO):
         suite = self._test_loading(XML_DATASOURCE_ONLY, 'Xml Testcases')
 
     def test_load_data_with_html_and_xml_datasources_xml_loading_off(self):
-        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases 2')
+        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases2')
         self.assertEqual(suite.tests[0].status, 'FAIL')
 
     def test_load_data_with_html_and_xml_datasources_xml_loading_on(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases 2')
+        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases2')
         self.assertEqual(suite.tests[0].status, 'PASS')
 
     def test_load_data_with_directory_and_xml_datasources_with_xml_loading_on(self):
@@ -111,7 +111,7 @@ class TestLoadData(_TestIO):
 
     def test_load_datasource_and_xml_with_no_updates_in_html(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases 2')
+        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases2')
         self.assertFalse(DATA_MODIFIED.is_modified(),
                         "Status should be False as there is no modifications.")
 
@@ -142,7 +142,7 @@ class TestLoadData(_TestIO):
     def test_load_data_with_invalid_datasource_and_valid_xml(self):
         io.SETTINGS["include"] = ['no-tag']
         io.SETTINGS["always_load_old_data_from_xml"] = True        
-        msg = "Suite 'Testcases 2' with includes 'no-tag' contains no test cases.\n"
+        msg = "Suite 'Testcases2' with includes 'no-tag' contains no test cases.\n"
         self._test_error(HTML_DATASOURCE_WITH_XML, msg)
 
     def test_load_data_with_valid_datasource_and_invalid_xml(self):
@@ -158,8 +158,8 @@ class TestLoadData(_TestIO):
         return msg % (path)
 
     def test_load_data_with_xml_error_and_datasource_error(self):
-        io.SETTINGS["always_load_old_data_from_xml"] = True      
-        msg = "Test case file '%s' contains no test cases. and\n" % (INVALID_HTML)
+        io.SETTINGS["always_load_old_data_from_xml"] = True
+        msg = "Parsing '%s' failed: File has no test case table. and\n" % (INVALID_HTML)
         msg += self._get_invalid_xml_message(INVALID_XML)
         self._test_error(INVALID_HTML, msg)
 
