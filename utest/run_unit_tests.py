@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
 
 usage: run_unit_tests.py [options]
 
-options: 
+options:
     -q, --quiet     Minimal output
     -v, --verbose   Verbose output
     -d, --doc       Show test's doc string instead of name and class
@@ -35,8 +35,8 @@ for path in [ "../src" ]:
     path = os.path.join(base, path.replace('/', os.sep))
     if path not in sys.path:
         sys.path.insert(0, path)
-        
-testfile = re.compile("^test_.*\.py$", re.IGNORECASE)          
+
+testfile = re.compile("^test_.*\.py$", re.IGNORECASE)
 
 
 def get_tests(directory=None):
@@ -55,14 +55,14 @@ def get_tests(directory=None):
             modules.append(__import__(modname))
     tests.extend([ unittest.defaultTestLoader.loadTestsFromModule(module)
                    for module in modules ])
-    return tests        
+    return tests
 
 
 def parse_args(argv):
     docs = 0
     verbosity = 1
     try:
-        options, args = getopt.getopt(argv, 'hH?vqd', 
+        options, args = getopt.getopt(argv, 'hH?vqd',
                                       ['help','verbose','quiet','doc'])
         if len(args) != 0:
             raise getopt.error, 'no arguments accepted, got %s' % (args)

@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,8 +35,8 @@ class _Mock:
         self.visible = visible
 
 class MockSuite(_Mock):
-    
-    def __init__(self, name, mediumname=None, longname=None, visible=True, 
+
+    def __init__(self, name, mediumname=None, longname=None, visible=True,
                  suites=[], tests=[]):
         _Mock.__init__(self, name, mediumname, longname, visible)
         for suite in suites:
@@ -45,10 +45,10 @@ class MockSuite(_Mock):
         for test in tests:
             test.parent = self
         self.tests = tests
-        
+
 class MockTest(_Mock):
-        
-    def __init__(self, name, mediumname=None, longname=None, 
+
+    def __init__(self, name, mediumname=None, longname=None,
                  visible=True, keywords=[]):
         _Mock.__init__(self, name, mediumname, longname, visible)
         for kw in keywords:
@@ -56,13 +56,13 @@ class MockTest(_Mock):
         self.keywords = keywords
 
 class TestTreeSuite(unittest.TestCase):
-    
-    
+
+
     def test_simple_suite_name(self):
         suite = MockSuite('Suite')
         tree_suite = tree.SuiteTreeItem(suite)
         self.assertEquals(tree_suite.label, 'Suite')
-        
+
     def test_name_when_test_cases(self):
         test1 = MockTest('Test1')
         test2 = MockTest('Test2')
@@ -78,7 +78,7 @@ class TestTreeSuite(unittest.TestCase):
         self.assertEquals(tree_suite.label, 'Suite1')
         self.assertEquals(tree_suite.children[0].label, 'SubSuite1')
         self.assertEquals(tree_suite.children[1].label, 'SubSuite2')
-        
+
     def test_collapse_all_suites_with_one_sub_suite_with_one_test_leaf(self):
         test1 = MockTest('Test1')
         subsub1 = MockSuite('SubSubSuite1', tests=[test1])
@@ -113,13 +113,13 @@ class TestTreeSuite(unittest.TestCase):
         self.assertEquals(tree_suite.children[0].label, 'SubSubSuite1')
         self.assertEquals(len(tree_suite.children), 1)
         self.assertEquals(len(tree_suite.children[0].children), 1)
-                
+
     def test_get_icon_names_with_file_suite(self):
         test = MockTest('Test')
         suite = MockSuite('Suite', tests=[test])
         tree_suite = tree.SuiteTreeItem(suite)
         self.assertEquals(tree_suite.GetIconName(), 'file_suite')
-        
+
     def test_get_icon_names_with_dir_suite(self):
         subsuite = MockSuite('SubSuite')
         suite = MockSuite('Suite', suites=[subsuite])

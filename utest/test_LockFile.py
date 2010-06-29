@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,12 @@ from mabot.utils.lock import LockFile, LockException
 
 
 class MockLockFile(LockFile):
-    
+
     def __init__(self, path, time, user):
         self.time = time
         self.user = user
         LockFile.__init__(self, path)
-    
+
     def _get_time(self):
         return self.time
 
@@ -33,7 +33,7 @@ class MockLockFile(LockFile):
         return self.user
 
 class MockLockWriting(MockLockFile):
-    
+
     def _write(self, path, content):
         raise Exception("Writing to file failed!")
 
@@ -66,11 +66,11 @@ class TestLockFile(unittest.TestCase):
         content = lock.read()
         lock.close()
         return content
-    
+
     def tearDown(self):
         self._remove_lock()
 
-        
+
     def test_create_lock_no_lock_1(self):
         value = self.lock.create_lock(MockDialog(True).dialog)
         self.assertEqual(value, self.expected1)
@@ -80,7 +80,7 @@ class TestLockFile(unittest.TestCase):
         value = self.lock.create_lock(MockDialog(False).dialog)
         self.assertEqual(value, self.expected1)
         self.assertTrue(os.path.exists(self.lock_path))
-        
+
     def test_create_lock_lock_is_not_override(self):
         lock_file_content = self.lock.create_lock(MockDialog(True).dialog)
         self.assertEqual(lock_file_content, self.expected1)
@@ -95,7 +95,7 @@ class TestLockFile(unittest.TestCase):
         lock_file_content_2 = self.lock2.create_lock(MockDialog(True).dialog)
         self.assertEqual(lock_file_content_2, self.expected2)
         self.assertTrue(os.path.exists(self.lock_path))
-        
+
     def test_release_log(self):
         lock_file_content_1 = self.lock.create_lock(MockDialog(True).dialog)
         self.assertEqual(lock_file_content_1, self.expected1)
@@ -109,15 +109,15 @@ class TestLockFile(unittest.TestCase):
 
 
 class MockDialog:
-    
+
     def __init__(self, return_value):
         self.return_value = return_value
-        
+
     def dialog(self, title, message):
         self.title = title
         self.message = message
         return self.return_value
-        
+
 
 if __name__ == "__main__":
     unittest.main()

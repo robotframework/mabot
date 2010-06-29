@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,13 +39,13 @@ class TestDataConversion(unittest.TestCase):
     def test_link_with_data_both_sides(self):
         text = 'hello\n\n\nhttp://www.google.com world!\n'
         _equals(get_text_parts(text), (('hello\n\n\n', 'normal'),
-                                  ('http://www.google.com', 'link'), 
+                                  ('http://www.google.com', 'link'),
                                   (' world!\n', 'normal')))
 
     def test_multiple_links(self):
         text = 'hello http://www.google.com world!\n other http://my.com'
         _equals(get_text_parts(text), (('hello ', 'normal'),
-                                  ('http://www.google.com', 'link'), 
+                                  ('http://www.google.com', 'link'),
                                   (' world!\n other ', 'normal'),
                                   ('http://my.com', 'link')))
 
@@ -56,12 +56,12 @@ class TestDataConversion(unittest.TestCase):
 
     def test_two_bolds(self):
         text = 'some *hello* other *bold*\n'
-        _equals(get_text_parts(text), (('some', 'normal'), (' hello ', 'bold'), 
+        _equals(get_text_parts(text), (('some', 'normal'), (' hello ', 'bold'),
                                   ('other', 'normal'), (' bold\n', 'bold')))
 
     def test_two_italics(self):
         text = 'some _hello_ other _bold_\n'
-        _equals(get_text_parts(text), (('some', 'normal'), (' hello ', 'italic'), 
+        _equals(get_text_parts(text), (('some', 'normal'), (' hello ', 'italic'),
                                   ('other', 'normal'), (' bold\n', 'italic')))
 
     def test_file_name_with_underscores(self):
@@ -72,7 +72,7 @@ class TestDataConversion(unittest.TestCase):
         starttime = time.time()
         _equals(get_text_parts(long_message), ((long_message, 'normal'), ))
         self.assertTrue(time.time() - starttime < 2)
-        
+
 long_message = """
 some asjdkasjd alkjshd ksaj hdksad hkjsa hdksaj hdksaj hdksahd ksaj hdksaj hdk
 ----------asdkjsadk jhaskd hksaj hdksa hdksaj hd --hh as-d h-as hd-sal dhsald h

@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ ROBOT_VERSION = get_version()
 from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
 
-    
+
 DATA_FOLDER = normcase(join(dirname(__file__), 'data',))
 SUITES_FOLDER = join(DATA_FOLDER, 'suites')
 SUITES_FOLDER_WITH_OS_SEP = SUITES_FOLDER + os.sep
@@ -54,7 +54,7 @@ class _TestIO(unittest.TestCase):
     def tearDown(self):
         DATA_MODIFIED.saved()
         io.SETTINGS = self.orig_settings
-        
+
     def _test_loading(self, source, name):
         suite = self.io.load_data(source)
         self.assertEqual(suite.name, name)
@@ -68,7 +68,7 @@ class _TestIO(unittest.TestCase):
 
 
 class TestLoadData(_TestIO):
-    
+
     def test_load_data_without_datasources(self):
         suite = self._test_loading(None, '')
 
@@ -78,7 +78,7 @@ class TestLoadData(_TestIO):
     def test_load_data_with_only_html_datasource_and_xml_loading_on(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
         suite = self._test_loading(HTML_DATASOURCE_ONLY, 'Testcases')
-        
+
     def test_load_data_with_only_tsv_datasource(self):
         suite = self._test_loading(TSV_DATASOURCE_ONLY, 'Tsv Testcases')
 
@@ -102,8 +102,8 @@ class TestLoadData(_TestIO):
 
     def test_load_datasource_and_xml_with_updates_in_html(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        suite = self._test_loading(HTML_DATASOURCE_WITH_UPDATES, 
-                                   'Html With Updates')        
+        suite = self._test_loading(HTML_DATASOURCE_WITH_UPDATES,
+                                   'Html With Updates')
         self.assertEquals(len(suite.tests), 2)
         self.assertEquals(suite.tests[0].message, 'Failure!')
         self.assertTrue(DATA_MODIFIED.is_modified(),
@@ -119,7 +119,7 @@ class TestLoadData(_TestIO):
         msg = "Found test 'TC' from suite 'Same Test Name' 2 times.\n"
         msg += "Mabot supports only unique test case names!\n"
         self._test_error(SAME_TEST_NAME, msg)
-    
+
 
     def test_load_data_with_html_suite_with_dublicate_keywords(self):
         msg = "Could not create keyword 'UK' in testcase 'Duplicate Keywords.TC1'."
@@ -135,13 +135,13 @@ class TestLoadData(_TestIO):
         self._test_error(NON_EXISTING_XML, msg)
 
     def test_load_data_with_non_existing_datasource_with_xml_loading_on(self):
-        io.SETTINGS["always_load_old_data_from_xml"] = True        
+        io.SETTINGS["always_load_old_data_from_xml"] = True
         msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
         self._test_error(NON_EXISTING_DATASOURCE, msg)
 
     def test_load_data_with_invalid_datasource_and_valid_xml(self):
         io.SETTINGS["include"] = ['no-tag']
-        io.SETTINGS["always_load_old_data_from_xml"] = True        
+        io.SETTINGS["always_load_old_data_from_xml"] = True
         msg = "Suite 'Testcases2' with includes 'no-tag' contains no test cases.\n"
         self._test_error(HTML_DATASOURCE_WITH_XML, msg)
 
@@ -167,48 +167,48 @@ class TestLoadData(_TestIO):
 class TestGetDatasourceAndXml(_TestIO):
 
     def test_get_datasource_and_xml_from_xml(self):
-        self.assertEqual(self.io._get_datasource_and_xml_from(XML_DATASOURCE_ONLY), 
+        self.assertEqual(self.io._get_datasource_and_xml_from(XML_DATASOURCE_ONLY),
                          (None, XML_DATASOURCE_ONLY))
 
     def test_get_datasource_and_xml_from_html_loading_off(self):
         io.SETTINGS["always_load_old_data_from_xml"] = False
-        self.assertEqual(self.io._get_datasource_and_xml_from(HTML_DATASOURCE_WITH_XML), 
+        self.assertEqual(self.io._get_datasource_and_xml_from(HTML_DATASOURCE_WITH_XML),
                          (HTML_DATASOURCE_WITH_XML, None))
 
     def test_get_datasource_and_xml_from_html(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        self.assertEqual(self.io._get_datasource_and_xml_from(HTML_DATASOURCE_WITH_XML), 
-                         (HTML_DATASOURCE_WITH_XML, 
+        self.assertEqual(self.io._get_datasource_and_xml_from(HTML_DATASOURCE_WITH_XML),
+                         (HTML_DATASOURCE_WITH_XML,
                           HTML_DATASOURCE_WITH_XML.replace('.html', '.xml')))
 
     def test_get_datasource_and_xml_from_dir_without_os_sep(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        self.assertEqual(self.io._get_datasource_and_xml_from(SUITES_FOLDER), 
+        self.assertEqual(self.io._get_datasource_and_xml_from(SUITES_FOLDER),
                          (SUITES_FOLDER, SUITES_FOLDER+'.xml'))
 
     def test_get_datasource_and_xml_from_dir_ending_with_os_sep(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
         folder = SUITES_FOLDER.endswith(os.sep) and SUITES_FOLDER
-        self.assertEqual(self.io._get_datasource_and_xml_from(SUITES_FOLDER_WITH_OS_SEP), 
+        self.assertEqual(self.io._get_datasource_and_xml_from(SUITES_FOLDER_WITH_OS_SEP),
                          (SUITES_FOLDER, SUITES_FOLDER+'.xml'))
 
     def test_get_datasource_and_xml_from_tsv(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        self.assertEqual(self.io._get_datasource_and_xml_from(TSV_DATASOURCE_ONLY), 
+        self.assertEqual(self.io._get_datasource_and_xml_from(TSV_DATASOURCE_ONLY),
                          (TSV_DATASOURCE_ONLY, TSV_DATASOURCE_ONLY.replace('.tsv', '.xml')))
 
     def test_get_datasource_and_xml_from_txt(self):
         msg = "Path '%s' is not in supported format!\nSupported formats" % (TEXT_DATASOURCE)
         msg += " are HTML, TSV, XML and Robot Framework's test suite directory."
-        self._test_error(TEXT_DATASOURCE, msg, 
+        self._test_error(TEXT_DATASOURCE, msg,
                          self.io._get_datasource_and_xml_from)
 
     def test_get_datasource_and_xml_from_non_existing_file(self):
         msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
-        self._test_error(NON_EXISTING_DATASOURCE, msg, 
+        self._test_error(NON_EXISTING_DATASOURCE, msg,
                          self.io._get_datasource_and_xml_from)
-            
-    
+
+
 class TestBackUp(_TestIO):
 
     def setUp(self):
@@ -217,11 +217,11 @@ class TestBackUp(_TestIO):
         self.orig_get_timestamp = self.io._get_timestamp
         self.io._get_timestamp = self._get_timestamp
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        
-        
+
+
     def tearDown(self):
         _TestIO.tearDown(self)
-        self.io._get_timestamp = self.orig_get_timestamp 
+        self.io._get_timestamp = self.orig_get_timestamp
         for path in self.remove_files:
             if os.path.exists(path):
                 os.remove(path)
@@ -289,7 +289,7 @@ class TestBackUp(_TestIO):
         data = f.read()
         f.close()
         return data
-        
+
     def _write(self, path, data):
         f = open(path, 'w')
         f.write(data)
@@ -299,7 +299,7 @@ class TestBackUp(_TestIO):
         return '20090114092000'
 
 class TestGetTimeStamp(_TestIO):
-    
+
     def test_get_timestamp(self):
         timestamp = self.io._get_timestamp()
         self.assertEquals(len(timestamp), 14)
