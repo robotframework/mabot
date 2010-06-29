@@ -336,7 +336,7 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         self._add_from_items_to_items(other.tests, self.tests,
                                       add_from_xml, override_method)
         if self._has_new_children(other):
-            self._mark_data_modified(False)
+            self._mark_data_modified(update_starttime=False)
         self._update_status()
 
     def _add_from_items_to_items(self, other_items, self_items,
@@ -352,7 +352,7 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
                 self_items.append(other_item)
             else:
                 # model != XML
-                self._mark_data_modified(False)
+                self._mark_data_modified(update_starttime=False)
 
     def _has_new_children(self, other):
         for suite in self.suites:
@@ -458,7 +458,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
         elif add_from_xml:
             self._resolve_keywords_results(other)
         else:
-            self._mark_data_modified(False)
+            self._mark_data_modified(executed=False)
 
     def _add_info_from_other(self, other):
         AbstractManualTestOrKeyword._add_info_from_other(self, other)
@@ -481,7 +481,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
             tkMessageBox('Keywords Reloaded', msg % (self.longname))
         self._add_info_from_other(test)
         self._copy_keywords(test)
-        self._mark_data_modified(False)
+        self._mark_data_modified(executed=False)
 
     def _load_test_from_datasource(self):
         suite = ManualSuite(utils.load_data(self.parent.source, SETTINGS))
@@ -511,7 +511,7 @@ Do you want your changes to be overridden?"""
         for tag in self.tags:
             if tag not in tags:
                 tags.append(tag)
-                self._mark_data_modified(False)
+                self._mark_data_modified(executed=False)
         self.tags = sorted(tags)
 
     def add_tags(self, tags, mark_modified=True):
