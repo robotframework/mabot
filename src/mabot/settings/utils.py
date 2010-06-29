@@ -25,7 +25,7 @@ class SettingsIO:
         In case path is given, it is used instead of tool_name and file_name.
         """
         if path:
-            self.directory = os.path.dirname(path) 
+            self.directory = os.path.dirname(path)
             self._path = path
         else:
             self.directory, self._path = self._get_paths(tool_name, file_name)
@@ -34,13 +34,13 @@ class SettingsIO:
 
     def _get_paths(self, tool_name, file_name):
         if not file_name:
-            file_name = tool_name + 'settings.py' 
+            file_name = tool_name + 'settings.py'
         settings_dir = os.path.join(SETTINGS_DIRECTORY, tool_name)
         return settings_dir, os.path.join(settings_dir, file_name)
 
     def write(self, settings_dict):
         """ Writes given settings dictionary to settings file.
-        
+
         Setting names (keys) should not contain spaces.
         """
         self._validate_setting_names(settings_dict)
@@ -65,7 +65,7 @@ class SettingsIO:
         try:
             exec f in namespace
         except SyntaxError, error:
-            message = "Settings file '%s' is not a valid Python file.\n%s" 
+            message = "Settings file '%s' is not a valid Python file.\n%s"
             message = message % (self._path, error)
             raise InvalidSettings(message)
         finally:
@@ -82,20 +82,20 @@ class SettingsIO:
 
 
 class RFSettings(SettingsIO):
-    
-    def __init__(self, tool_name=None, file_name=None, path=None, defaults={}, 
+
+    def __init__(self, tool_name=None, file_name=None, path=None, defaults={},
                  logger=None):
         """tool_name is used to create folder for tool specific settings.
         In case file name is given, that is used to create the settings file.
         In case path is given, it is used instead of tool_name and file_name.
-        Default values to the settings can be also given. It can be dictionary 
+        Default values to the settings can be also given. It can be dictionary
         or path to python file.
-        logger is method which is called with message if any error occurs 
+        logger is method which is called with message if any error occurs
         when loading or saving settings.
         """
         self._settings = {}
         self._logger = logger or (lambda x: None)
-        SettingsIO.__init__(self, tool_name, file_name, path)        
+        SettingsIO.__init__(self, tool_name, file_name, path)
         self.update(defaults, save=False)
         self._defaults = copy(self._settings)
         self.load()
@@ -103,17 +103,17 @@ class RFSettings(SettingsIO):
     def __setitem__(self, name, value):
         #TODO: Check value type
         self._settings[name] = value
-    
+
     def __getitem__(self, name):
         return self._settings[name]
-    
-    # TODO: Is there need def set(self, value) which could return boolean if 
+
+    # TODO: Is there need def set(self, value) which could return boolean if
     # value have changed.
-    
+
     def update(self, settings, save=True):
         """Updates based on the given settings.
         Settings can be dictionary or path to python file.
-        In case of python file, it is imported and all attributes 
+        In case of python file, it is imported and all attributes
         not starting with underscore are considered as settings.
         """
         if not settings:
@@ -129,7 +129,7 @@ class RFSettings(SettingsIO):
                 self._logger(error.message)
         if save:
             self.save()
-            
+
     def save(self):
         self.write(self._settings)
 

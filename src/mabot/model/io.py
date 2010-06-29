@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ import time
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
-    try: 
+    try:
         import cElementTree as ET
     except ImportError:
         try:
@@ -38,7 +38,7 @@ from mabot.utils import robotapi
 
 
 class IO:
-    
+
     def __init__(self):
         self.ask_method = None
         self.xml_generated = None
@@ -55,7 +55,7 @@ class IO:
         self._set_suite(testdata_suite, data_error, xml_suite, xml_error)
         self.output = xml or os.path.abspath('output.xml')
         return self.suite
-        
+
     def _set_suite(self, testdata_suite, data_error, xml_suite, xml_error):
         if testdata_suite and xml_suite:
             testdata_suite.add_results(xml_suite)
@@ -91,7 +91,7 @@ class IO:
             try:
                 suite = ManualSuite(utils.load_data(source, SETTINGS))
                 return suite, None
-            except Exception, error:        
+            except Exception, error:
                 return None, error
         return None, None
 
@@ -104,8 +104,8 @@ class IO:
             raise IOError(msg)
         if not self._is_supported_format(path, extension):
             msg += "Path '%s' is not in supported format!\n" % (path)
-            msg += "Supported formats are HTML, " 
-            msg += "TSV, XML and Robot Framework's test suite directory." 
+            msg += "Supported formats are HTML, "
+            msg += "TSV, XML and Robot Framework's test suite directory."
             raise IOError(msg)
         if extension.lower() == '.xml':
             return None, path
@@ -140,7 +140,7 @@ class IO:
             SETTINGS["check_simultaneous_save"] and \
             os.path.exists(self.output) and \
             self.xml_generated != self._get_xml_generation_time():
-            xml_suite = ManualSuite(robotapi.XmlTestSuite(self.output), None, True)                
+            xml_suite = ManualSuite(robotapi.XmlTestSuite(self.output), None, True)
             if xml_suite:
                 self.suite.add_results(xml_suite, True, ask_method)
                 return True
@@ -151,17 +151,17 @@ class IO:
         self._make_backup()
         #TODO: Change how execution errors are given
         testoutput = robotapi.RobotTestOutput(self.suite)
-        testoutput.serialize_output(self.output, self.suite)            
+        testoutput.serialize_output(self.output, self.suite)
         self.suite.saved()
         DATA_MODIFIED.saved()
         self.xml_generated = self._get_xml_generation_time()
-    
+
     def _make_backup(self):
         if os.path.exists(self.output) and \
         SETTINGS["always_load_old_data_from_xml"]:
-            # Creates backup only if the XML is valid 
+            # Creates backup only if the XML is valid
             # Makes sure, that valid backup is not overridden
-            backup = '%s.bak' % self.output 
+            backup = '%s.bak' % self.output
             try:
                 # Validates XML
                 self._get_xml_generation_time()
@@ -181,15 +181,14 @@ Note that some results will most probably be lost.
                     raise IOError(msg)
             else:
                 shutil.copyfile(self.output, self.output+'.bak')
-    
+
     def _get_timestamp(self):
         return '%d%02d%02d%02d%02d%02d' % time.localtime()[:6]
-    
+
     def _get_xml_generation_time(self, path=None):
         if path is None:
-            path = self.output 
+            path = self.output
         try:
             return ET.ElementTree(file=path).getroot().get("generated")
         except:
             raise IOError('%s is not a valid XML file!' % self.output)
-

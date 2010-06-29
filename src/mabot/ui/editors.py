@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ def Editor(master, tree_item):
         return KeywordEditor(master, tree_item)
 
 class AbstractEditor:
-        
+
     def __init__(self, master, tree_item):
         self._tree_item = tree_item
         self._model_item = self._tree_item.item.model_item
@@ -41,29 +41,29 @@ class AbstractEditor:
         self._editor.pack(fill=BOTH)
 
     def _create_name(self, master):
-        self._create_title_and_data(master, self._title, 
+        self._create_title_and_data(master, self._title,
                                     self._model_item.name)
 
     def _create_documentation(self, master):
         if self._model_item.doc:
-            self._create_title_and_data(master, "Documentation", 
+            self._create_title_and_data(master, "Documentation",
                                         self._model_item.doc)
 
     def _create_status(self, master):
-        row = CommonFrame(master)        
+        row = CommonFrame(master)
         TitleLabel(row, "Status")
         self._create_status_radio_buttons(row).pack(side=LEFT, expand=1, anchor=W)
         row.pack(fill=BOTH, expand=1, anchor=W)
-        
+
     def _create_status_radio_buttons(self, master):
         frame = CommonFrame(master)
         self._status = StringVar()
         self._status.set(self._model_item.status)
-        Radiobutton(frame, foreground='green', text="PASS", 
+        Radiobutton(frame, foreground='green', text="PASS",
                     variable=self._status, value="PASS",
                     command=lambda: self._set_status('PASS'),
                     background='white').pack(side=LEFT, expand=1)
-        Radiobutton(frame, foreground='red', text="FAIL", 
+        Radiobutton(frame, foreground='red', text="FAIL",
                     variable=self._status, value="FAIL",
                     command=lambda: self._set_status('FAIL'),
                     background='white').pack(side=LEFT, expand=1)
@@ -75,7 +75,7 @@ class AbstractEditor:
         label = DataLabel(row, data, **datacnf)
         row.pack(fill=BOTH, expand=1, anchor=N+W)
         return label
-        
+
     def _create_message(self, master):
         row = CommonFrame(master)
         TitleLabel(row, "Message")
@@ -83,8 +83,8 @@ class AbstractEditor:
         scrollbar_y.pack(side=RIGHT, fill=Y, expand=1)
         scrollbar_x = Scrollbar(row, orient=HORIZONTAL)
         scrollbar_x.pack(side= BOTTOM, fill=X, expand=1)
-        self._message_field = DataLabel(row, 
-                                        self._model_item.message, editable=True, 
+        self._message_field = DataLabel(row,
+                                        self._model_item.message, editable=True,
                                         yscrollcommand=scrollbar_y.set,
                                         xscrollcommand=scrollbar_x.set)
         self._message_field.bind('<Key>', self._save_message)
@@ -93,9 +93,9 @@ class AbstractEditor:
         scrollbar_y.config(command=self._message_field.yview)
         scrollbar_x.config(command=self._message_field.xview)
         row.pack(fill='both')
-        
+
     def _create_times(self, master):
-        self._times = self._create_title_and_data(master, "Modified / Saved:", 
+        self._times = self._create_title_and_data(master, "Modified / Saved:",
                                                   self._get_times())
 
     def _get_times(self):
@@ -104,7 +104,7 @@ class AbstractEditor:
     def _save_message(self, event):
         self._model_item.set_message(self._get_message())
         self.update(update_message=False)
-            
+
     def update(self, update_message=True):
         if update_message:
             self._message_field.delete(START, END)
@@ -112,24 +112,24 @@ class AbstractEditor:
         self._status.set(self._model_item.status)
         self._times.update_field(self._get_times())
         self._tree_item.update()
-    
+
     def _set_status(self, status):
         self._model_item.update_status_and_message(status, self._get_message())
         self._tree_item.update()
         self.update()
-                    
+
     def _get_message(self):
         return self._message_field.get(START, END)
-        
+
     def close(self):
         self._save_message(None)
         self._editor.destroy()
 
 class TitleLabel(Label):
-    
+
     def __init__(self, master, text, **cnf):
         text = text + ' '*(14-len(text))
-        Label.__init__(self, master, text=text, font=('Courier', 8, 'bold'), 
+        Label.__init__(self, master, text=text, font=('Courier', 8, 'bold'),
                        background='white', **cnf)
         Label.pack(self, expand=1, anchor=W)
 
@@ -142,7 +142,7 @@ class DataLabel(Text):
         border = self.editable and 1 or 0
         width = 80
         height = self.editable and 30 or get_height(text, width)
-        wrap = not self.editable and WORD or NONE 
+        wrap = not self.editable and WORD or NONE
         Text.__init__(self, master, border=border, width=width,
                       font=('Courier', 8), height=height,  wrap=wrap, **cnf)
         self.tag_config("normal", font=('Courier', 8))
@@ -153,7 +153,7 @@ class DataLabel(Text):
             self.config(state=DISABLED, cursor="arrow")
         Text.pack(self)
 
-    def insert_to_field(self, text): 
+    def insert_to_field(self, text):
         """Update only content, no size."""
         self._insert_to_field(get_text_parts(text))
 
@@ -164,7 +164,7 @@ class DataLabel(Text):
             if type == 'link':
                 modified_type = "link_%d" % (link_number)
                 self.tag_config(modified_type, foreground="blue", underline=1)
-                self.tag_bind(modified_type,"<Button-1>", 
+                self.tag_bind(modified_type,"<Button-1>",
                               OpenLink(text, type).launch)
                 link_number +=1
             self.insert(INSERT, text, modified_type)
@@ -176,9 +176,9 @@ class DataLabel(Text):
         self.insert_to_field(text)
         if not self.editable:
             self.config(state=DISABLED)
-    
+
 class SuiteEditor(AbstractEditor):
-    
+
     def __init__(self, master, tree_item):
         self._title = 'Test Suite'
         AbstractEditor.__init__(self, master, tree_item)
@@ -193,7 +193,7 @@ class SuiteEditor(AbstractEditor):
     def _create_status(self, master):
         row = CommonFrame(master)
         TitleLabel(row, "Status")
-        self._status_field = DataLabel(row, self._model_item.status, 
+        self._status_field = DataLabel(row, self._model_item.status,
                                        foreground=get_status_color(self._model_item))
         row.pack(fill='both')
 
@@ -209,7 +209,7 @@ class SuiteEditor(AbstractEditor):
 
     def update(self, update_message=True):
         if not update_message:
-            return 
+            return
         self._message_field.update_field(self._model_item.message)
         self._status_field.configure(foreground=get_status_color(self._model_item))
         self._status_field.update_field(self._model_item.status)
@@ -217,7 +217,7 @@ class SuiteEditor(AbstractEditor):
     def close(self):
         self._editor.destroy()
 
-        
+
 class TestEditor(AbstractEditor):
 
     def __init__(self, master, tree_item):
@@ -233,7 +233,7 @@ class TestEditor(AbstractEditor):
         self._create_times(editor)
 
     def _create_tags(self, master):
-        self._tag_label = self._create_title_and_data(master, "Tags", 
+        self._tag_label = self._create_title_and_data(master, "Tags",
                                     ', '.join(self._model_item.tags))
 
     def update(self, update_message=True):
@@ -261,7 +261,7 @@ class KeywordEditor(AbstractEditor):
             step += '\n\n' + '\n\n'.join(self._model_item.args)
         self._create_title_and_data(master, 'Step'+s, step)
 
-        
+
 link = '(file|https?)://[^ ]*'
 bold = '(\s|^)\*.*?\*(\s|$)'
 italic = '(\s|^)_.*?_(\s|$)'
@@ -277,7 +277,7 @@ def get_text_parts(text):
     else:
         return _create_tuple(text, match, _get_type(match))
 
-    
+
 def _get_type(match):
     content = match.groups()[0]
     for regexp, type in searches:
@@ -285,7 +285,7 @@ def _get_type(match):
             return type
 
 
-def _create_tuple(text, match, type):    
+def _create_tuple(text, match, type):
     content = match.groups()[0]
     items = []
     found =False
@@ -295,7 +295,7 @@ def _create_tuple(text, match, type):
         if item is content:
             if type == 'bold' or type == 'italic':
                 result = ''
-                if not item[0] in ['*', '_']: 
+                if not item[0] in ['*', '_']:
                     result += item[0] + item[2:-2]
                 else:
                     result += item[1:-2]
@@ -333,10 +333,10 @@ def get_height(text, width):
 
 
 class OpenLink:
-    
+
     def __init__(self, content, type):
         self.content = content
         self.type = type
-                
+
     def launch(self, event):
         webbrowser.open(self.content)

@@ -1,13 +1,13 @@
 #!/usr/local/bin python
 
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,31 +18,31 @@
 """Mabot -- Robot Framework's Manual Test Execution Tool
 
 Version: <VERSION>
-    
+
 Usage:  mabot.py [options] datasource/output
-  
+
 Inputs to Mabot are Robot's test suite (HTML, TSV or directory) or output (XML)
-of Mabot or Robot. Mabot can be used to mark test cases' and keywords' status 
-and messages and to generate Robot Framework's XML output file which can be 
-further processed with Rebot or other tools allowing one combined result from 
+of Mabot or Robot. Mabot can be used to mark test cases' and keywords' status
+and messages and to generate Robot Framework's XML output file which can be
+further processed with Rebot or other tools allowing one combined result from
 multiple test executions.
 
 Options:
 
- -i --include tag *       Select test cases by tag. Tag is case and space 
-                          insensitive and it can also be a simple pattern. To 
-                          include only tests which have more than one tag use 
+ -i --include tag *       Select test cases by tag. Tag is case and space
+                          insensitive and it can also be a simple pattern. To
+                          include only tests which have more than one tag use
                           '&' or 'AND' between tag names.
                           For example '--include tag1&tag2' includes only those
                           tests that have both 'tag1' and 'tag2'.
-                          When this option is given, it overrides the include 
+                          When this option is given, it overrides the include
                           setting. New value is also automatically saved.
  -e --exclude tag *       Unselect test cases by tag. These tests are not
                           selected even if they are included with --include.
                           Tag names are handled similarly as in --include and
                           excluding only tests containing multiple tags works
                           works the same way using '&' or 'AND'.
-                          When this option is given, it overrides the exclude 
+                          When this option is given, it overrides the exclude
                           setting. New value is also automatically saved.
  -h -? --help             Print usage instructions.
  --version                Print version information.
@@ -86,4 +86,3 @@ def _exit(message, rc=0):
 
 if __name__ == '__main__':
     run(sys.argv[1:])
-

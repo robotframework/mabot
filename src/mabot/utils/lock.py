@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,16 @@ import os
 import time
 
 class LockFile:
-    
+
     def __init__(self, path):
         self.path = path
         self.lock_path = path + '.lock'
         self.lock_file_content = None
-        
+
     def create_lock(self, ask_method):
         """Checks whether the lock file exists. Calls ask_method if it exists.
 
-        Returns the the content of the created lock. Raises exception in case 
+        Returns the the content of the created lock. Raises exception in case
         creating the lock file fails.
         """
         lock_file_content = self._get_lock_file()
@@ -48,7 +48,7 @@ class LockFile:
                 lock.close()
             except:
                 pass
-            message = "Could not read lock '%s'.\n%s" % (self.lock_path, 
+            message = "Could not read lock '%s'.\n%s" % (self.lock_path,
                                                          error[0])
             raise LockException(message)
         return content
@@ -75,20 +75,20 @@ Editing started at %s.
         except:
             user = "Unknown"
         return user
-    
+
     def _write(self, file, content):
         file.write(content)
 
     def _get_time(self):
         return time.asctime()
-    
+
     def release_lock(self):
         """Releases the created lock file."""
         try:
             content = self._get_lock_file()
             if content != self.content:
                 msg = """Data edited while you were saving it.
-Use "Save As" to save results to some other file 
+Use "Save As" to save results to some other file
 and resolve the conflicts manually."""
                 raise LockException(msg)
             if os.path.exists(self.lock_path):
@@ -98,6 +98,5 @@ and resolve the conflicts manually."""
 
 
 class LockException(Exception):
-    
-    pass
 
+    pass

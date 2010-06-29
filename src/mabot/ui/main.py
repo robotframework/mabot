@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ from ui import *
 
 
 class Mabot:
-    
+
     def __init__(self, datasource, options):
         self.root = Tk()
         self._save_options(options)
@@ -71,7 +71,7 @@ class Mabot:
             self._update_ui()
 
     def _show_error(self, error, message):
-        tkMessageBox.showerror(message, error[0])            
+        tkMessageBox.showerror(message, error[0])
 
     def _create_ui(self):
         self._create_root()
@@ -116,12 +116,12 @@ class Mabot:
 
     def _create_tree(self, master):
         tree_area = CommonFrame(master)
-        canvas = TreeWidget.ScrolledCanvas(tree_area, bg="white", 
+        canvas = TreeWidget.ScrolledCanvas(tree_area, bg="white",
                                            highlightthickness=0, takefocus=1)
         canvas.frame.pack(fill=BOTH, expand=1)
         tree_area.pack(side=LEFT, fill=BOTH)
         return canvas
-    
+
     def _create_visibility_selection(self, master):
         tag_selection_frame = CommonFrame(master)
         Label(tag_selection_frame, text="Tag Filter:", background='white').pack(side=LEFT)
@@ -141,8 +141,8 @@ class Mabot:
         self.tag_selection = StringVar(master)
         self.tag_selection.set(ALL_TAGS_VISIBLE) # default value
         self.previous_tag_selection = self.tag_selection.get()
-        self.tag_options = OptionMenu(master, self.tag_selection, ALL_TAGS_VISIBLE, 
-                                      command=lambda x: self._tag_selection_updated(True)) 
+        self.tag_options = OptionMenu(master, self.tag_selection, ALL_TAGS_VISIBLE,
+                                      command=lambda x: self._tag_selection_updated(True))
         self.tag_options.configure(bg="white")
         self.tag_options.pack(side=LEFT)
         master.pack(anchor=NW)
@@ -153,25 +153,25 @@ class Mabot:
         self.last_tag_pattern = self.tag_pattern.get()
         self._update_visibility()
         self._tag_selection_updated()
-    
+
     def _update_visibility(self):
         self._change_visibility()
         self.tag_selection.set(ALL_TAGS_VISIBLE) # default value
         self._recreate_tag_selection()
 
-    def _change_visibility(self):    
+    def _change_visibility(self):
         inc, exc = get_includes_and_excludes_from_pattern(self.tag_pattern.get())
         self.suite.change_visibility(inc, exc, self.tag_selection.get())
-    
+
     def _recreate_tag_selection(self):
         selection = self.tag_options['menu']
         while selection.index(END) != 0:
             selection.delete(END)
         for tag in sorted(self.suite.get_all_visible_tags()):
-            selection.insert(END, 'command', label=tag, 
-                             command=_setit(self.tag_selection, tag, 
+            selection.insert(END, 'command', label=tag,
+                             command=_setit(self.tag_selection, tag,
                                             lambda x: self._tag_selection_updated(True)))
-        
+
     def _tag_selection_updated(self, only_selection_updated=False):
         if only_selection_updated and \
             self.tag_selection.get() == self.previous_tag_selection:
@@ -202,12 +202,12 @@ class Mabot:
             self._active_node.item.model_item.update_status_and_message(status, message)
         self.node.update()
         self.current_editor.update()
-            
+
     def _add_tags(self, event=None):
         if self._active_node.item.model_item.is_keyword():
             self._statusbar("No test suite or test case selected")
         else:
-            tags = tkSimpleDialog.askstring('Add Tags', 
+            tags = tkSimpleDialog.askstring('Add Tags',
                             "Add tags (separated with ', ' i.e. tag-1, tag-2)")
             tags = utils.get_tags_from_string(tags)
             self._active_node.item.model_item.add_tags(tags)
@@ -224,18 +224,18 @@ class Mabot:
             if dialog.pressed == 'OK':
                 self._remove_old_tag(dialog.tags)
             dialog.destroy()
-    
+
     def _remove_old_tag(self, tags):
         self._active_node.item.model_item.remove_tags(tags)
         self._create_new_editor()
         self._update_visibility()
-            
+
     def notify_select(self, tree_node):
         if self._active_node is None or tree_node != self._active_node:
             self._active_node = tree_node
             self._create_new_editor()
             self._statusbar_right.configure(text='')
-                
+
     def _create_new_editor(self):
         self.current_editor.close()
         self.current_editor = Editor(self.editor_frame, self._active_node)
@@ -245,13 +245,13 @@ class Mabot:
             path = tkFileDialog.Open().show()
             if path:
                 self._load_data_and_update_ui(path)
-        
+
     def _open_dir(self, event=None):
         if self._continue_without_saving():
             directory = tkFileDialog.Directory().show()
             if directory:
                 self._load_data_and_update_ui(directory)
-                
+
     def _save(self, path=None):
         progress = ProgressBar(self.root, 'Saving...')
         progress.add_ask_method(tkMessageBox.askyesno)
@@ -273,43 +273,43 @@ class Mabot:
             if changes:
                 self._statusbar('Loaded changes from ' + self.io.output)
             else:
-                self._statusbar('No changes to be saved')        
-                 
+                self._statusbar('No changes to be saved')
+
     def _statusbar(self, message):
         self._statusbar_right.configure(text=message)
-       
+
     def _save_as(self):
         path = tkFileDialog.SaveAs().show()
         if path:
             self._save(path)
-    
+
     def _quit(self, event=None):
         if self._continue_without_saving():
             self.root.destroy()
 
     def _continue_without_saving(self):
         return not DATA_MODIFIED.is_modified() or \
-            tkMessageBox.askyesno("Unsaved changes", 
+            tkMessageBox.askyesno("Unsaved changes",
                     "You have unsaved changes.\nDo you still want to exit?")
 
     def _edit_settings(self):
         settings_dialog = SettingsDialog(self.root, "Settings")
         SETTINGS.update_settings(settings_dialog.new_settings, self.suite)
         self.current_editor.update()
-                        
+
     def _about(self, event=None):
         msg = '''Mabot, version %s
 
 More information: http://code.google.com/p/robotframework-mabot/''' % (version)
         tkMessageBox.showinfo("About Mabot", msg)
-     
+
     def _create_menu(self):
         menubar = Menu(self.root)
         self._create_file_menu(menubar)
         self._create_edit_menu(menubar)
         self._create_settings_menu(menubar)
         self._create_tools_menu(menubar)
-        self._create_help_menu(menubar)        
+        self._create_help_menu(menubar)
         self.root.config(menu=menubar) # display the menu
         self._create_popup_menu()
 
@@ -343,36 +343,36 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
     def _create_popup_menu(self):
         popup = Menu(self.root, tearoff=0)
         self._create_copy_paste(popup)
-        self.root.bind("<Button-3>", lambda x: popup.tk_popup(x.x_root + 50, 
-                                                              x.y_root + 10, 0))        
+        self.root.bind("<Button-3>", lambda x: popup.tk_popup(x.x_root + 50,
+                                                              x.y_root + 10, 0))
     def _cut(self):
         self.root.focus_get().event_generate('<<Cut>>')
 
     def _copy(self):
         self.root.focus_get().event_generate('<<Copy>>')
-    
+
     def _paste(self):
         self.root.focus_get().event_generate('<<Paste>>')
-    
+
     def _create_settings_menu(self, menubar):
         settingsmenu = Menu(menubar, tearoff=0)
         settingsmenu.add_command(label="Settings", command=self._edit_settings)
-        settingsmenu.add_command(label="Restore Settings", 
+        settingsmenu.add_command(label="Restore Settings",
                                  command=SETTINGS.restore)
         menubar.add_cascade(label="Settings", menu=settingsmenu)
 
     def _create_tools_menu(self, menubar):
         toolsmenu = Menu(menubar, tearoff=0)
-        toolsmenu.add_command(label="Set All Passed  Ctrl+P", 
+        toolsmenu.add_command(label="Set All Passed  Ctrl+P",
                               command=lambda: self._set_status('PASS', all=True))
-        self.root.bind("<Control-p>", lambda x: self._set_status('PASS', all=True))        
-        toolsmenu.add_command(label='Set All Failed  Ctrl+F', 
+        self.root.bind("<Control-p>", lambda x: self._set_status('PASS', all=True))
+        toolsmenu.add_command(label='Set All Failed  Ctrl+F',
                               command=lambda: self._set_status_failed(all=True))
-        self.root.bind("<Control-f>", lambda x: self._set_status_failed(all=True))        
-        toolsmenu.add_command(label='Add Tags     Ctrl+A', 
+        self.root.bind("<Control-f>", lambda x: self._set_status_failed(all=True))
+        toolsmenu.add_command(label='Add Tags     Ctrl+A',
                               command=self._add_tags)
-        self.root.bind("<Control-a>", self._add_tags)        
-        toolsmenu.add_command(label='Remove Tags     Ctrl+R', 
+        self.root.bind("<Control-a>", self._add_tags)
+        toolsmenu.add_command(label='Remove Tags     Ctrl+R',
                               command=self._remove_tags)
         self.root.bind("<Control-r>", self._remove_tags)
         menubar.add_cascade(label="Tools", menu=toolsmenu)
@@ -395,4 +395,3 @@ More information: http://code.google.com/p/robotframework-mabot/''' % (version)
         self._statusbar_right = Label(statusbar, background='white')
         self._statusbar_right.pack(side=RIGHT)
         statusbar.pack(side=BOTTOM, fill=X)
-

@@ -1,11 +1,11 @@
 #  Copyright 2008 Nokia Siemens Networks Oyj
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,15 +23,15 @@ TreeWidget.ICONDIR = os.path.join(os.path.dirname(__file__), 'icons')
 
 
 class Node(TreeWidget.TreeNode):
-    
+
     def __init__(self, canvas, parent, item, root=None):
         self.root = root
         TreeWidget.TreeNode.__init__(self, canvas, parent, item)
-        self.label = ForeGroundLabel(self.canvas, 
-                                     get_status_color(self.item.model_item), 
-                                     text=self.item.GetText(), bd=0, padx=2, 
+        self.label = ForeGroundLabel(self.canvas,
+                                     get_status_color(self.item.model_item),
+                                     text=self.item.GetText(), bd=0, padx=2,
                                      pady=2)
-        
+
     def select(self, event=None):
         TreeWidget.TreeNode.select(self, event)
         if self.root is not None:
@@ -46,11 +46,11 @@ class Node(TreeWidget.TreeNode):
 
     def drawtext(self):
         self.label.update_foreground(get_status_color(self.item.model_item))
-        TreeWidget.TreeNode.drawtext(self)            
+        TreeWidget.TreeNode.drawtext(self)
 
 
 class ForeGroundLabel(Label):
-    
+
     def __init__(self, master, foreground, **cnf):
         self.foreground = foreground
         Label.__init__(self, master, cnf)
@@ -58,13 +58,13 @@ class ForeGroundLabel(Label):
     def update_foreground(self, foreground):
         self.foreground = foreground
         Label.configure(self, {'foreground':self.foreground})
-            
+
     def configure(self, cnf):
         Label.configure(self, cnf)
         Label.configure(self, {'foreground':self.foreground})
 
 class _RobotTreeItem(TreeWidget.TreeItem):
-    
+
     def __init__(self, item):
         self.model_item = item
         self.children = self._get_children()
@@ -72,16 +72,16 @@ class _RobotTreeItem(TreeWidget.TreeItem):
 
     def GetText(self):
         return self.label
-    
+
     def GetSubList(self):
         return self.children
-    
+
     def IsExpandable(self):
         return self.model_item.has_visible_children()
 
 
 class SuiteTreeItem(_RobotTreeItem):
-            
+
     def _get_children(self):
         if self._only_one_visible_folder_suite_child(self.model_item):
             visible_suite = [s for s in self.model_item.suites if s.visible ][0]
@@ -94,7 +94,7 @@ class SuiteTreeItem(_RobotTreeItem):
             if test.visible:
                 children.append(TestTreeItem(test))
         return children
-    
+
     def GetIconName(self):
         if self.model_item.tests:
             return 'file_suite'
@@ -117,11 +117,11 @@ class SuiteTreeItem(_RobotTreeItem):
 
 
 class _AbstractTestAndKWItem(_RobotTreeItem):
-        
+
     def _get_label(self):
         return self.model_item.name
 
-    def _get_children(self): 
+    def _get_children(self):
         return [ KeywordTreeItem(kw) for kw in self.model_item.keywords ]
 
 
@@ -129,9 +129,9 @@ class TestTreeItem(_AbstractTestAndKWItem):
 
     def GetIconName(self):
         return 'test'
-    
+
 
 class KeywordTreeItem(_AbstractTestAndKWItem):
-        
+
     def GetIconName(self):
         return 'keyword'
