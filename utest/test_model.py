@@ -21,6 +21,7 @@ from robot.common.model import BaseTestSuite, BaseTestCase
 from mabot.model.io import IO
 from mabot.model import model
 
+
 class _TestAddingData(unittest.TestCase):
 
     def setUp(self):
@@ -28,7 +29,7 @@ class _TestAddingData(unittest.TestCase):
         self.suite = IO().load_data(data)
         self.other_suite = deepcopy(self.suite)
         self.test = self.suite.suites[1].tests[0]
-        self.other_test = deepcopy(self.test)
+        self.other_test = self.other_suite.suites[1].tests[0]
 
     def tearDown(self):
         model.DATA_MODIFIED.status = False
@@ -40,6 +41,17 @@ class TestAddDataFromOtherItem(_TestAddingData):
         self.other_suite.suites[1].tests[0].set_all('PASS')
         self.suite.add_results(self.other_suite)
         self.assertEquals(self.suite.suites[1].tests[0].status, 'PASS')
+
+    def test_adding_suites_sub_suites_with_old_naming(self):
+        self.other_suite.name = 'Root SUITE'
+        self.other_suite.suites[1].tests[0].name = 'tc_with_keywords'
+        self.other_suite.suites[1].tests[0].keywords[0].name = 'uk_1'
+        self.other_suite.suites[1].tests[0].set_all('PASS')
+        self.suite.add_results(self.other_suite)
+        self.assertEquals(self.suite.suites[1].tests[0].status, 'PASS', 
+                          'test results are not added')
+        self.assertEquals(self.suite.suites[1].tests[0].keywords[0].status,
+                          'PASS', 'keyword results are not added')
 
     def test_adding_suites_tests(self):
         self.other_suite.suites[1].tests[0].set_all('PASS')
@@ -421,6 +433,7 @@ class TestLoadOtherWithKeywords(_TestAddingData):
                          'Message and status are same, should not update items')
         self.assertEqual(len(self.mock.messages), 0)
 
+
 class TestGettingTags(unittest.TestCase):
 
     def setUp(self):
@@ -478,6 +491,7 @@ class TestGettingTags(unittest.TestCase):
     def test_getting_tags_from_directory_suite(self):
         tags = self.suite.get_all_visible_tags()
         self.assertEquals(['tag-1', 'tag-2', 'tag-3'], tags)
+
 
 class MockDialog:
 

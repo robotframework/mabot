@@ -86,6 +86,7 @@ class TestLoadData(_TestIO):
         suite = self._test_loading(XML_DATASOURCE_ONLY, 'Xml Testcases')
 
     def test_load_data_with_html_and_xml_datasources_xml_loading_off(self):
+        io.SETTINGS["always_load_old_data_from_xml"] = False
         suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases2')
         self.assertEqual(suite.tests[0].status, 'FAIL')
 
@@ -115,10 +116,10 @@ class TestLoadData(_TestIO):
                         "Status should be False as there is no modifications.")
 
     def test_load_datasource_and_xml_with_same_test_case_names(self):
+        io.SETTINGS["always_load_old_data_from_xml"] = False
         msg = "Found test 'TC' from suite 'Same Test Name' 2 times.\n"
         msg += "Mabot supports only unique test case names!\n"
         self._test_error(SAME_TEST_NAME, msg)
-
 
     def test_load_data_with_html_suite_with_dublicate_keywords(self):
         msg = "Could not create keyword 'UK' in testcase 'Duplicate Keywords.TC1'."
