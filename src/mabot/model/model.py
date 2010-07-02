@@ -43,7 +43,7 @@ DATA_MODIFIED = Modified()
 ALL_TAGS_VISIBLE = "ALL MATCHING TAGS VISIBLE"
 
 class EmptySuite:
-    """Suite used when initializing the Mabot with no data"""
+    """Suite used when initializing the Mabot without data"""
 
     def __init__(self):
         self.parent = None
@@ -93,7 +93,7 @@ class UserKeywordLibrary:
 KW_LIB = UserKeywordLibrary()
 
 
-class AbstractManualModel:
+class AbstractManualModel(object):
 
     def __init__(self, item, parent=None):
         self.is_modified = False
@@ -106,10 +106,7 @@ class AbstractManualModel:
 
     def _get_status(self, item):
         """Gets the status correctly from robot.running and robot.output items.
-
-        Works also with changes done to Robot Framework 2.0.3.
         """
-        #TODO: Move to robotapi
         status = getattr(item, 'status', 'FAIL')
         return status == 'PASS' and 'PASS' or 'FAIL'
 
@@ -198,6 +195,9 @@ class AbstractManualModel:
             return ManualKeyword(kw, self, from_xml)
         return None
 
+    def has_same_name(self, other):
+        return robotapi.eq(self.name, other.name, ignore=['_'])
+
 
 class AbstractManualTestOrKeyword(AbstractManualModel):
 
@@ -205,7 +205,7 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
         if len(self.keywords) != len(other.keywords):
             return False
         for kw1, kw2 in zip(self.keywords, other.keywords):
-            if kw1.name != kw2.name or not kw1._has_same_keywords(kw2):
+            if not (kw1.has_same_name(kw2) and kw1._has_same_keywords(kw2)):
                 return False
         return True
 
@@ -264,10 +264,6 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
             suite = self._init_data(suite)
         AbstractManualModel.__init__(self, suite, parent)
         self.longname = suite.longname
-        #TODO: Remove support for 2.0.4 RF
-        if hasattr(suite, 'mediumname'):
-            self.mediumname = suite.mediumname
-            self.filtered = suite.filtered
         self.metadata = suite.metadata
         self.critical = suite.critical
         self.critical_stats = suite.critical_stats
@@ -285,12 +281,13 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         self._check_no_duplicate_tests()
 
     def _check_no_duplicate_tests(self):
-        names = [ test.name for test in self.tests ]
+        names = [ robotapi.normalize(test.name, ignore=['_']) for test in self.tests ]
         for test in self.tests:
-            if names.count(test.name) > 1:
+            count = names.count(robotapi.normalize(test.name, ignore=['_']))
+            if count > 1:
                 msg = "Found test '%s' from suite '%s' %s times.\n"
                 msg += "Mabot supports only unique test case names!"
-                msg = msg % (test.name, self.longname, names.count(test.name))
+                msg = msg % (test.name, self.longname, count)
                 raise IOError(msg)
 
     def _update_status(self):
@@ -329,7 +326,7 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         return updated_status
 
     def add_results(self, other, add_from_xml=False, override_method=None):
-        if not other or self.name != other.name:
+        if not other or not self.has_same_name(other):
             return None
         self._add_from_items_to_items(other.suites, self.suites,
                                       add_from_xml, override_method)
@@ -342,24 +339,37 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
     def _add_from_items_to_items(self, other_items, self_items,
                                  add_from_xml, override_method):
         for other_item in other_items:
-            if other_item.name in [ i.name for i in self_items ]:
-                for self_item in self_items:
-                    if self_item.name == other_item.name:
-                        self_item.add_results(other_item, add_from_xml,
-                                          override_method)
-                        break
+            item_added = self._add_item_to_items(other_item, self_items,
+                                                 add_from_xml, override_method)
+            if item_added:
+                continue
             elif add_from_xml:
                 self_items.append(other_item)
             else:
                 # model != XML
                 self._mark_data_modified(update_starttime=False)
 
+    def _add_item_to_items(self, other_item, self_items, add_from_xml,
+                                  override_method):
+        for self_item in self_items:
+            if self_item.has_same_name(other_item):
+                self_item.add_results(other_item, add_from_xml,
+                                  override_method)
+                return True
+        return False
+
     def _has_new_children(self, other):
         for suite in self.suites:
-            if not suite.name in [ s.name for s in other.suites ]:
+            if not self._is_item_in_others(suite, other.suites):
                 return True
         for test in self.tests:
-            if not test.name in [ s.name for s in other.tests ]:
+            if not self._is_item_in_others(test, other.tests):
+                return True
+        return False
+
+    def _is_item_in_others(self, item, other_items):
+        for other_item in other_items:
+            if item.has_same_name(other_item):
                 return True
         return False
 
@@ -422,9 +432,6 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
             self.message = test.message or ""
         else:
             self.message = self._get_default_message()
-        #TODO: Remove support for 2.0.4 RF
-        if hasattr(test, 'mediumname'):
-            self.mediumname = test.mediumname
         self.longname = test.longname
         self.setup = self._get_fixture_keyword(test.setup, from_xml)
         self.teardown = self._get_fixture_keyword(test.teardown, from_xml)
@@ -486,7 +493,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def _load_test_from_datasource(self):
         suite = ManualSuite(utils.load_data(self.parent.source, SETTINGS))
         for test in suite.tests:
-            if test.name == self.name:
+            if self.has_same_name(test):
                 return test
 
     def _copy_keywords(self, other):
@@ -504,7 +511,6 @@ Other test information:
 Do you want your changes to be overridden?"""
         message = message % (self.longname, s_diffs, o_diffs)
         return "Conflicting Test Results!", message
-
 
     def _add_loaded_tags(self, other):
         tags = other.tags[:]

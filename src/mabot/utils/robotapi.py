@@ -25,7 +25,7 @@ try:
     from robot.running.namespace import Namespace
     from robot.running.context import ExecutionContext
     from robot.utils import ArgumentParser, get_timestamp, normalize,\
-                            elapsed_time_to_string
+                            elapsed_time_to_string, eq
     from robot.utils import get_elapsed_time as _get_elapsed_time
     from robot import version
     ROBOT_VERSION = version.get_version()
