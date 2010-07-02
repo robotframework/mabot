@@ -99,7 +99,6 @@ class TestLoadData(_TestIO):
         suite = self._test_loading(SUITES_FOLDER, 'Suites')
         self.assertEqual(suite.suites[0].tests[0].status, 'PASS')
 
-
     def test_load_datasource_and_xml_with_updates_in_html(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
         suite = self._test_loading(HTML_DATASOURCE_WITH_UPDATES,
