@@ -36,7 +36,7 @@ try:
 except ImportError, error:
     print """All needed Robot modules could not be imported.
 Check your Robot installation."""
-    print "Error was: %s" % (error.message)
+    print "Error was: %s" % (error)
     sys.exit(1)
 
 
