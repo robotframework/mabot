@@ -33,7 +33,7 @@ HTML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'testcases.html')
 TSV_DATASOURCE_ONLY = join(SUITES_FOLDER, 'tsv_testcases.tsv')
 XML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'output.xml')
 HTML_DATASOURCE_WITH_XML = join(SUITES_FOLDER, 'testcases2.html')
-TEXT_DATASOURCE = join(SUITES_FOLDER, 'text.txt')
+INVALID_FORMAT_DATASOURCE = join(SUITES_FOLDER, 'text.inv')
 NON_EXISTING_DATASOURCE = join(DATA_FOLDER, 'foo.html')
 NON_EXISTING_XML = join(DATA_FOLDER, 'foo.xml')
 DUPLICATE_USERKEYWORDS = join(DATA_FOLDER, 'duplicate_keywords.html')
@@ -198,10 +198,8 @@ class TestGetDatasourceAndXml(_TestIO):
                          (TSV_DATASOURCE_ONLY, TSV_DATASOURCE_ONLY.replace('.tsv', '.xml')))
 
     def test_get_datasource_and_xml_from_txt(self):
-        msg = "Path '%s' is not in supported format!\nSupported formats" % (TEXT_DATASOURCE)
-        msg += " are HTML, TSV, XML and Robot Framework's test suite directory."
-        self._test_error(TEXT_DATASOURCE, msg,
-                         self.io._get_datasource_and_xml_from)
+        msg = "Parsing '%s' failed: Unsupported file format 'inv'.\n" % (INVALID_FORMAT_DATASOURCE)
+        self._test_error(INVALID_FORMAT_DATASOURCE, msg, self.io.load_data)
 
     def test_get_datasource_and_xml_from_non_existing_file(self):
         msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)

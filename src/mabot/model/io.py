@@ -102,11 +102,6 @@ class IO:
         if not os.path.exists(path):
             msg += "Path '%s' does not exist!" % (path)
             raise IOError(msg)
-        if not self._is_supported_format(path, extension):
-            msg += "Path '%s' is not in supported format!\n" % (path)
-            msg += "Supported formats are HTML, "
-            msg += "TSV, XML and Robot Framework's test suite directory."
-            raise IOError(msg)
         if extension.lower() == '.xml':
             return None, path
 
