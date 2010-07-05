@@ -137,7 +137,7 @@ class RFSettings(SettingsIO):
         try:
             settings = self.read()
         except InvalidSettings, error:
-            self._logger(error.message)
+            self._logger(str(error))
             return
         for key in settings.keys():
             self._settings[key] = settings[key]
