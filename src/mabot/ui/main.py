@@ -81,6 +81,7 @@ class Mabot:
 
     def _update_ui(self):
         self._init_tree_view()
+        self._update_visibility()
         self._create_new_editor()
 
     def _ask_tags_added_to_modified_tests(self):
