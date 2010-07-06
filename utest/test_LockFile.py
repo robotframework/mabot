@@ -13,11 +13,13 @@
 #  limitations under the License.
 
 
-import unittest
 import os.path
+import unittest
+import time
+import tempfile
 
 from mabot.utils.lock import LockFile, LockException
-
+from mabot.utils import lock as lock_module
 
 class MockLockFile(LockFile):
 
@@ -106,6 +108,33 @@ class TestLockFile(unittest.TestCase):
     def test_create_lock_writing_to_lock_fails(self):
         lock = MockLockWriting(self.path, self.time, self.user)
         self.assertRaises(LockException, lock.create_lock, MockDialog(False).dialog)
+
+    def test_reading_lock_fails(self):
+        try:
+            orig_os_path_exists = lock_module.os.path.exists
+            lock_module.os.path.exists = lambda x: True
+            self.assertRaises(LockException, self.lock._get_lock_file)
+        finally:
+            lock_module.os.path.exists = orig_os_path_exists
+
+
+class TestGetUser(unittest.TestCase):
+
+    def setUp(self):
+        self._lock_file = LockFile('none')
+        self.orig_username = os.environ.get('USERNAME', None)
+
+    def tearDown(self):
+        if self.orig_username:
+            os.environ['USERNAME'] = self.orig_username
+
+    def test_get_user(self):
+        os.environ['USERNAME'] = 'user'
+        self.assertEqual(self._lock_file._get_user(), 'user')
+
+    def test_get_user_when_it_does_not_exist(self):
+        os.environ.pop('USERNAME', 'default which prevents KeyError')
+        self.assertEqual(self._lock_file._get_user(), 'Unknown')
 
 
 class MockDialog:
