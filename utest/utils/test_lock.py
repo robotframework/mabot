@@ -15,13 +15,12 @@
 
 import os.path
 import unittest
-import time
-import tempfile
 
 from robot.utils.asserts import assert_raises_with_msg
 
 from mabot.utils.lock import LockFile, LockException
 from mabot.utils import lock as lock_module
+
 
 class MockLockFile(LockFile):
 
@@ -49,7 +48,7 @@ Editing started at %s.
 class TestLockFile(unittest.TestCase):
 
     def setUp(self):
-        self.path = os.path.join(os.path.dirname(__file__), 'data', 'a.xml')
+        self.path = os.path.join(os.path.dirname(__file__), '..', 'data', 'a.xml')
         self.lock_path = self.path + '.lock'
         self.time = "20080808"
         self.user = "user"
