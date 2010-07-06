@@ -48,8 +48,7 @@ class LockFile:
                 lock.close()
             except:
                 pass
-            message = "Could not read lock '%s'.\n%s" % (self.lock_path,
-                                                         error[0])
+            message = "Could not read lock: %s" % (str(error))
             raise LockException(message)
         return content
 
@@ -65,7 +64,7 @@ Editing started at %s.
             lock.close()
         except Exception, error:
             lock.close()
-            raise LockException("Could not create the lock. %s" % (error[0]))
+            raise LockException("Could not create the lock: %s" % (str(error)))
         self.content = content
         return self.content
 
@@ -94,7 +93,7 @@ and resolve the conflicts manually."""
             if os.path.exists(self.lock_path):
                 os.remove(self.lock_path)
         except Exception, error:
-            raise LockException("Could not remove lock file. %s" % (error[0]))
+            raise LockException("Could not remove lock file. %s" % (str(error)))
 
 
 class LockException(Exception):

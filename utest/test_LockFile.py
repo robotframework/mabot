@@ -18,6 +18,8 @@ import unittest
 import time
 import tempfile
 
+from robot.utils.asserts import assert_raises_with_msg
+
 from mabot.utils.lock import LockFile, LockException
 from mabot.utils import lock as lock_module
 
@@ -113,9 +115,28 @@ class TestLockFile(unittest.TestCase):
         try:
             orig_os_path_exists = lock_module.os.path.exists
             lock_module.os.path.exists = lambda x: True
-            self.assertRaises(LockException, self.lock._get_lock_file)
+            msg = "Could not read lock: [Errno 2] No such file or directory: '%s'" % (self.lock_path)
+            assert_raises_with_msg(LockException, msg, 
+                                   self.lock._get_lock_file)
         finally:
             lock_module.os.path.exists = orig_os_path_exists
+
+    def test_releasing_lock_fails(self):
+        try:
+            orig_os_path_exists = lock_module.os.path.exists
+            lock_module.os.path.exists = lambda x: True
+            msg = """Could not remove lock file. Could not read lock: [Errno 2] No such file or directory: '%s'""" % self.lock_path
+            assert_raises_with_msg(LockException, msg, self.lock.release_lock)
+        finally:
+            lock_module.os.path.exists = orig_os_path_exists
+
+    def test_releasing_lock_fails_when_content_have_been_changed(self):
+        self.lock.create_lock(MockDialog(True))
+        self.lock.content = "Another user stole the lock."
+        msg = """Could not remove lock file. Data edited while you were saving it.
+Use "Save As" to save results to some other file
+and resolve the conflicts manually."""
+        assert_raises_with_msg(LockException, msg, self.lock.release_lock)
 
 
 class TestGetUser(unittest.TestCase):
