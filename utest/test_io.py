@@ -316,10 +316,10 @@ class TestSavingData(_TestIO):
     def setUp(self):
         _TestIO.setUp(self)
         shutil.copy(HTML_DATASOURCES_XML, HTML_DATASOURCES_XML+'.utest')
-        self.io.load_data(HTML_DATASOURCE_WITH_XML)
         self._orig_always_load = SETTINGS["always_load_old_data_from_xml"]
         self._orig_check = SETTINGS["check_simultaneous_save"]
         SETTINGS["always_load_old_data_from_xml"] = True
+        self.io.load_data(HTML_DATASOURCE_WITH_XML)
 
     def tearDown(self):
         _TestIO.tearDown(self)
