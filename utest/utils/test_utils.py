@@ -28,9 +28,14 @@ class TestGetTagsFromString(unittest.TestCase):
         self.assertEquals(get_tags_from_string('tag-1, tag, another'), 
                           ['tag-1', 'tag', 'another'])
 
-    def test_string_with_comma_tags(self):
+    def test_string_with_comma_in_tag_name(self):
         self.assertEquals(get_tags_from_string('tag-1, another,tag'), 
                           ['tag-1', 'another,tag'])
+
+    def test_string_with_empty_tag_name(self):
+        self.assertEquals(get_tags_from_string('tag-1, , another, , tag'), 
+                          ['tag-1', 'another', 'tag'])
+
 
 class TestGetStatusColor(unittest.TestCase):
 
