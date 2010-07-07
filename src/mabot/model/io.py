@@ -98,22 +98,15 @@ class IO:
     def _get_datasource_and_xml_from(self, path):
         path = os.path.normcase(os.path.abspath(path))
         root, extension = os.path.splitext(path)
-        msg = "Could not load data!\n"
         if not os.path.exists(path):
+            msg = "Could not load data!\n"
             msg += "Path '%s' does not exist!" % (path)
             raise IOError(msg)
         if extension.lower() == '.xml':
             return None, path
-
         if not SETTINGS["always_load_old_data_from_xml"]:
             return path, None
-        else:
-            return path, '%s.xml' % (root)
-
-    def _is_supported_format(self, path, extension):
-        if os.path.isdir(path):
-            return True
-        return extension.lower() in [ '.html', '.xml', '.tsv' ]
+        return path, '%s.xml' % (root)
 
     def save_data(self, output, ask_method):
         if output:
@@ -144,7 +137,6 @@ class IO:
     def _save_data(self):
         self.suite.save()
         self._make_backup()
-        #TODO: Change how execution errors are given
         testoutput = robotapi.RobotTestOutput(self.suite)
         testoutput.serialize_output(self.output, self.suite)
         self.suite.saved()
@@ -152,19 +144,26 @@ class IO:
         self.xml_generated = self._get_xml_generation_time()
 
     def _make_backup(self):
-        if os.path.exists(self.output) and \
-        SETTINGS["always_load_old_data_from_xml"]:
-            # Creates backup only if the XML is valid
-            # Makes sure, that valid backup is not overridden
-            backup = '%s.bak' % self.output
-            try:
-                # Validates XML
-                self._get_xml_generation_time()
-            except:
-                if os.path.exists(backup):
-                    time_backup = '%s_%s.bak' % (self.output, self._get_timestamp())
-                    shutil.copyfile(backup, time_backup)
-                    msg = '''
+        if not self._backup_is_needed():
+            return
+        try:
+            self._validate_related_xml(self.output)
+        except:
+            self._store_old_backup()
+        else:
+            shutil.copyfile(self.output, self._backup_path)
+
+    def _backup_is_needed(self):
+        return os.path.exists(self.output) and SETTINGS["always_load_old_data_from_xml"]
+
+    def _validate_related_xml(self, path):
+        self._get_xml_generation_time(path)
+
+    def _store_old_backup(self):
+        if not os.path.exists(self._backup_path):
+            return
+        shutil.copyfile(self._backup_path, self._backup_path_with_timestamp)
+        msg = '''
 %s is not a valid XML file!
 Timestamped backup file was generated automatically
 to file %s.
@@ -172,10 +171,16 @@ to file %s.
 Try to save again. If the problem exists, copy latest
 valid backup over the invalid XML without closing Mabot.
 Note that some results will most probably be lost.
-''' % (self.output, time_backup)
-                    raise IOError(msg)
-            else:
-                shutil.copyfile(self.output, self.output+'.bak')
+''' % (self.output, self._backup_path_with_timestamp)
+        raise IOError(msg)
+
+    @property
+    def _backup_path(self):
+        return '%s.bak' % self.output
+
+    @property
+    def _backup_path_with_timestamp(self):
+        return '%s_%s.bak' % (self.output, self._get_timestamp())
 
     def _get_timestamp(self):
         return '%d%02d%02d%02d%02d%02d' % time.localtime()[:6]
