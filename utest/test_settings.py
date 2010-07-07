@@ -44,7 +44,8 @@ class _TestSettings(unittest.TestCase):
 class TestSettings(_TestSettings):
 
     def test_loading_default_settings(self):
-        expected = self._read_settings_from_file(defaultsettings.__file__[:-1])
+        default_settings_path = defaultsettings.__file__.replace('.pyc', '.py')
+        expected = self._read_settings_from_file(default_settings_path)
         self.assertEquals(self.settings._settings, expected)
         self.assertEquals(self.settings._settings["include"], [])
         self.assertEquals(self.settings._settings["exclude"], [])
