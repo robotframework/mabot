@@ -25,7 +25,6 @@ ROBOT_VERSION = get_version()
 
 from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
-from mabot.settings import SETTINGS
 
 
 DATA_FOLDER = normcase(join(dirname(__file__), 'data',))
@@ -316,9 +315,9 @@ class TestSavingData(_TestIO):
     def setUp(self):
         _TestIO.setUp(self)
         shutil.copy(HTML_DATASOURCES_XML, HTML_DATASOURCES_XML+'.utest')
-        self._orig_always_load = SETTINGS["always_load_old_data_from_xml"]
-        self._orig_check = SETTINGS["check_simultaneous_save"]
-        SETTINGS["always_load_old_data_from_xml"] = True
+        self._orig_always_load = io.SETTINGS["always_load_old_data_from_xml"]
+        self._orig_check = io.SETTINGS["check_simultaneous_save"]
+        io.SETTINGS["always_load_old_data_from_xml"] = True
         self.io.load_data(HTML_DATASOURCE_WITH_XML)
 
     def tearDown(self):
@@ -328,8 +327,8 @@ class TestSavingData(_TestIO):
         if os.path.exists(backup):
             os.remove(backup)
         DATA_MODIFIED.saved()
-        SETTINGS["always_load_old_data_from_xml"] = self._orig_always_load
-        SETTINGS["check_simultaneous_save"] = self._orig_check
+        io.SETTINGS["always_load_old_data_from_xml"] = self._orig_always_load
+        io.SETTINGS["check_simultaneous_save"] = self._orig_check
 
     def test_save_data_without_output(self):
         generated = self.io._get_xml_generation_time()
@@ -363,7 +362,7 @@ class TestSavingData(_TestIO):
             os.remove(output)
 
     def test_saving_when_data_is_reloaded_from_xml(self):
-        SETTINGS["check_simultaneous_save"] = True
+        io.SETTINGS["check_simultaneous_save"] = True
         self.io.xml_generated = "changed"
         saved, changes = self.io.save_data(HTML_DATASOURCES_XML, None)
         self.assertTrue(changes)
