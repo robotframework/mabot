@@ -17,6 +17,7 @@ import copy
 import os
 import unittest
 from os.path import abspath, dirname, join, normcase
+import shutil
 
 from robot.utils.asserts import *
 from robot.version import get_version
@@ -24,6 +25,7 @@ ROBOT_VERSION = get_version()
 
 from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
+from mabot.settings import SETTINGS
 
 
 DATA_FOLDER = normcase(join(dirname(__file__), 'data',))
@@ -33,6 +35,7 @@ HTML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'testcases.html')
 TSV_DATASOURCE_ONLY = join(SUITES_FOLDER, 'tsv_testcases.tsv')
 XML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'output.xml')
 HTML_DATASOURCE_WITH_XML = join(SUITES_FOLDER, 'testcases2.html')
+HTML_DATASOURCES_XML = join(SUITES_FOLDER, 'testcases2.xml')
 INVALID_FORMAT_DATASOURCE = join(SUITES_FOLDER, 'text.inv')
 NON_EXISTING_DATASOURCE = join(DATA_FOLDER, 'foo.html')
 NON_EXISTING_XML = join(DATA_FOLDER, 'foo.xml')
@@ -55,11 +58,6 @@ class _TestIO(unittest.TestCase):
         DATA_MODIFIED.saved()
         io.SETTINGS = self.orig_settings
 
-    def _test_loading(self, source, name):
-        suite = self.io.load_data(source)
-        self.assertEqual(suite.name, name)
-        return suite
-
     def _test_error(self, path, message, method=None):
         if not method:
             method = self.io.load_data
@@ -68,6 +66,11 @@ class _TestIO(unittest.TestCase):
 
 
 class TestLoadData(_TestIO):
+
+    def _test_loading(self, source, name):
+        suite = self.io.load_data(source)
+        self.assertEqual(suite.name, name)
+        return suite
 
     def test_load_data_without_datasources(self):
         suite = self._test_loading(None, '')
@@ -296,6 +299,7 @@ class TestBackUp(_TestIO):
     def _get_timestamp(self):
         return '20090114092000'
 
+
 class TestGetTimeStamp(_TestIO):
 
     def test_get_timestamp(self):
@@ -305,6 +309,74 @@ class TestGetTimeStamp(_TestIO):
             int(timestamp)
         except ValueError:
             raise AssertionError('Timestamp is not valid!')
+
+
+class TestSavingData(_TestIO):
+
+    def setUp(self):
+        _TestIO.setUp(self)
+        shutil.copy(HTML_DATASOURCES_XML, HTML_DATASOURCES_XML+'.utest')
+        self.io.load_data(HTML_DATASOURCE_WITH_XML)
+
+    def tearDown(self):
+        _TestIO.tearDown(self)
+        shutil.move(HTML_DATASOURCES_XML+'.utest', HTML_DATASOURCES_XML)
+        backup = HTML_DATASOURCES_XML + '.bak'
+        if os.path.exists(backup):
+            os.remove(backup)
+        DATA_MODIFIED.saved()
+
+    def test_save_data_without_output(self):
+        generated = self.io._get_xml_generation_time()
+        saved, changes = self.io.save_data(None, None)
+        self.assertEquals(generated, self.io._get_xml_generation_time())
+        self.assertFalse(saved)
+        self.assertFalse(changes)
+
+    def test_save_data_without_output_and_modifications(self):
+        generated = self.io._get_xml_generation_time()
+        DATA_MODIFIED.modified()
+        saved, changes = self.io.save_data(None, None)
+        self.assertNotEquals(generated, self.io._get_xml_generation_time())
+        self.assertTrue(saved)
+        self.assertFalse(changes)
+
+    def test_save_data_with_output(self):
+        generated = self.io._get_xml_generation_time()
+        saved, changes = self.io.save_data(HTML_DATASOURCES_XML, None)
+        self.assertNotEquals(generated, self.io._get_xml_generation_time())
+        self.assertTrue(saved)
+        self.assertFalse(changes)
+
+    def test_save_data_should_change_output(self):
+        output = HTML_DATASOURCES_XML.replace('testcases2.xml', 'new.xml')
+        try:
+            self.io.save_data(output, None)
+            self.assertEquals(self.io.output, output)
+            self.assertTrue(os.path.exists(output))
+        finally:
+            os.remove(output)
+
+    def test_saving_when_data_is_reloaded_from_xml(self):
+        self._prepare_settings_for_reload()
+        self.io.xml_generated = "changed"
+        try:
+            saved, changes = self.io.save_data(HTML_DATASOURCES_XML, None)
+        finally:
+            self._restore_settings()
+        self.assertTrue(changes)
+        self.assertTrue(saved)
+
+    def _prepare_settings_for_reload(self):
+        self._orig_always_load = SETTINGS["always_load_old_data_from_xml"]
+        self._orig_check = SETTINGS["check_simultaneous_save"]
+        SETTINGS["always_load_old_data_from_xml"] = True
+        SETTINGS["check_simultaneous_save"] = True
+
+    def _restore_settings(self):
+        SETTINGS["always_load_old_data_from_xml"] = self._orig_always_load
+        SETTINGS["check_simultaneous_save"] = self._orig_check
+
 
 if __name__ == "__main__":
     unittest.main()
