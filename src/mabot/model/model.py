@@ -31,9 +31,6 @@ class Modified:
     def saved(self):
         self.status = False
 
-    def set(self, status):
-        self.status = status
-
     def is_modified(self):
         return self.status
 
@@ -418,9 +415,13 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         for item in self._get_items():
             if item.change_visibility(includes, excludes, tag_name):
                 self.visible = True
-        if not self.parent: #Keeps the root always visible
-            self.visible = True
+        self._keep_root_always_visible()
         return self.visible
+
+    def _keep_root_always_visible(self):
+        if not self.parent:
+            self.visible = True
+
 
 class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
 
