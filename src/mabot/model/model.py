@@ -258,7 +258,6 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
     def __init__(self, suite, parent=None, from_xml=False):
         if not from_xml:
             KW_LIB.add_suite_keywords(suite)
-            suite = self._init_data(suite)
         AbstractManualModel.__init__(self, suite, parent)
         self.longname = suite.longname
         self.metadata = suite.metadata
@@ -296,14 +295,6 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         if not test.visible and not self.saving:
             return
         robotapi.RunnableTestSuite._add_test_to_stats(self, test)
-
-    def _init_data(self, suite):
-        variables = robotapi.Namespace(suite, None)
-        context = robotapi.ExecutionContext(variables, None)
-        suite._set_variable_dependent_metadata(context)
-        for test in suite.tests:
-            test._init_test(context)
-        return suite
 
     def _get_items(self):
         return self.suites + self.tests
