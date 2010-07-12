@@ -23,7 +23,7 @@ from os.path import dirname, join
 import sys
 
 def main():
-    setup(name         = 'Mabot',
+    setup(name         = 'mabot',
           version      =  _get_version(),
           description  = 'Manual test result reporting tool for Robot Framework',
           author       = 'Robot Framework Developers',
