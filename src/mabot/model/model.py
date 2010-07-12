@@ -427,7 +427,7 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
         self.longname = test.longname
         self.setup = self._get_fixture_keyword(test.setup, from_xml)
         self.teardown = self._get_fixture_keyword(test.teardown, from_xml)
-        self.tags = test.tags
+        self.tags = robotapi.normalize_tags(test.tags)
         self.keywords = [ ManualKeyword(kw, self, from_xml) for kw in test.keywords ]
         self.critical = test.critical
         self.timeout = test.timeout
@@ -515,7 +515,7 @@ Do you want your changes to be overridden?"""
     def add_tags(self, tags, mark_modified=True):
         if not self.visible:
             return
-        for tag in tags:
+        for tag in robotapi.normalize_tags(tags):
             self._add_tag(tag, mark_modified)
         self.tags.sort()
 

@@ -46,6 +46,10 @@ class TestAddingTags(_TestAddAndRemoveTags):
         self._test_tags(initial_tags, self.test.add_tags, input, expected,
                         tags_allowed_only_once)
 
+    def test_added_tags_are_normalized(self):
+        self._test_add_tags([], ['foo', 'FOO', 'Foo'], ['foo'])
+
+
     def test_adding_tags_when_no_only_once_tags_defined(self):
         self._test_add_tags([], ['foo'], ['foo'])
 
@@ -176,6 +180,7 @@ class TestTagsAddedToModifiedTests(_TestAddAndRemoveTags):
     def _tags_are_added_to_test(self):
         self.assertEquals(self.test.tags, ['bar', 'foo', 'tag-1'])
         self.assertTrue(self.test.is_modified)
+
 
 if __name__ == "__main__":
     unittest.main()
