@@ -28,12 +28,14 @@ from mabot.model.io import IO
 from mabot.model.model import DATA_MODIFIED
 from mabot.model.model import ALL_TAGS_VISIBLE
 from mabot.model.model import get_includes_and_excludes_from_pattern
+from mabot import utils
 from mabot.version import version
 
 from editors import Editor
 from editors import SuiteEditor
 from progressbar import ProgressBar
-from ui import *
+from ui import CommonFrame, RemoveTagsDialog, ChangeStatusDialog, \
+               SettingsDialog
 
 
 class Mabot:
