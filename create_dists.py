@@ -20,18 +20,18 @@ import shutil
 import subprocess
 
 def _remove_build(root):
-	build = os.path.join(root, 'build')
-	if os.path.exists(build):
-		shutil.rmtree(build)
+    build = os.path.join(root, 'build')
+    if os.path.exists(build):
+        shutil.rmtree(build)
 
 def _remove_saved_settings(root):
-	path = os.path.join(root, 'src', 'mabot', 'settings', 'settings.py')
-	if os.path.exists(path):
-		os.remove(path)
+    path = os.path.join(root, 'src', 'mabot', 'settings', 'settings.py')
+    if os.path.exists(path):
+        os.remove(path)
 
 if __name__ == '__main__':
-	root = os.path.dirname(__file__)
-	_remove_build(root)
-	_remove_saved_settings(root)
-	subprocess.call('python setup.py bdist_wininst')
-	subprocess.call('python setup.py sdist')
+    root = os.path.dirname(__file__)
+    _remove_build(root)
+    _remove_saved_settings(root)
+    subprocess.call(['python', 'setup.py', 'bdist_wininst'])
+    subprocess.call(['python', 'setup.py', 'sdist'])
