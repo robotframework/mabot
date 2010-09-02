@@ -50,6 +50,7 @@ class TestLockFile(unittest.TestCase):
     def setUp(self):
         self.path = os.path.join(os.path.dirname(__file__), '..', 'data', 'a.xml')
         self.lock_path = self.path + '.lock'
+        self.lock_path = self.lock_path.replace('\\', '\\\\')
         self.time = "20080808"
         self.user = "user"
         self.lock = MockLockFile(self.path, self.time, self.user)
