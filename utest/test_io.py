@@ -16,10 +16,11 @@
 import copy
 import os
 import unittest
-from os.path import abspath, dirname, join, normcase
+from os.path import abspath, dirname, join
 import shutil
 
 from robot.utils.asserts import *
+from robot.utils import normpath
 from robot.version import get_version
 ROBOT_VERSION = get_version()
 
@@ -27,24 +28,24 @@ from mabot.model import io
 from mabot.model.model import DATA_MODIFIED
 
 
-DATA_FOLDER = normcase(join(dirname(__file__), 'data',))
-SUITES_FOLDER = join(DATA_FOLDER, 'suites')
+DATA_FOLDER = normpath(join(dirname(__file__), 'data',))
+SUITES_FOLDER = normpath(join(DATA_FOLDER, 'suites'))
 SUITES_FOLDER_WITH_OS_SEP = SUITES_FOLDER + os.sep
-HTML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'testcases.html')
-TSV_DATASOURCE_ONLY = join(SUITES_FOLDER, 'tsv_testcases.tsv')
-XML_DATASOURCE_ONLY = join(SUITES_FOLDER, 'output.xml')
-HTML_DATASOURCE_WITH_XML = join(SUITES_FOLDER, 'testcases2.html')
-HTML_DATASOURCES_XML = join(SUITES_FOLDER, 'testcases2.xml')
-INVALID_FORMAT_DATASOURCE = join(SUITES_FOLDER, 'text.inv')
-NON_EXISTING_DATASOURCE = join(DATA_FOLDER, 'foo.html')
-NON_EXISTING_XML = join(DATA_FOLDER, 'foo.xml')
-DUPLICATE_USERKEYWORDS = join(DATA_FOLDER, 'duplicate_keywords.html')
-INVALID_HTML = join(DATA_FOLDER, 'invalid.html')
-INVALID_XML = join(DATA_FOLDER, 'invalid.xml')
-VALID_HTML_INVALID_XML_DATASOURCE = join(DATA_FOLDER, 'valid_html_invalid_xml.html')
-VALID_HTML_INVALID_XML_XML = join(DATA_FOLDER, 'valid_html_invalid_xml.xml')
-HTML_DATASOURCE_WITH_UPDATES = join(DATA_FOLDER, 'html_with_updates.html')
-SAME_TEST_NAME = join(DATA_FOLDER, 'same_test_name.html')
+HTML_DATASOURCE_ONLY = normpath(join(SUITES_FOLDER, 'testcases.html'))
+TSV_DATASOURCE_ONLY = normpath(join(SUITES_FOLDER, 'tsv_testcases.tsv'))
+XML_DATASOURCE_ONLY = normpath(join(SUITES_FOLDER, 'output.xml'))
+HTML_DATASOURCE_WITH_XML = normpath(join(SUITES_FOLDER, 'testcases2.html'))
+HTML_DATASOURCES_XML = normpath(join(SUITES_FOLDER, 'testcases2.xml'))
+INVALID_FORMAT_DATASOURCE = normpath(join(SUITES_FOLDER, 'text.inv'))
+NON_EXISTING_DATASOURCE = normpath(join(DATA_FOLDER, 'foo.html'))
+NON_EXISTING_XML = normpath(join(DATA_FOLDER, 'foo.xml'))
+DUPLICATE_USERKEYWORDS = normpath(join(DATA_FOLDER, 'duplicate_keywords.html'))
+INVALID_HTML = normpath(join(DATA_FOLDER, 'invalid.html'))
+INVALID_XML = normpath(join(DATA_FOLDER, 'invalid.xml'))
+VALID_HTML_INVALID_XML_DATASOURCE = normpath(join(DATA_FOLDER, 'valid_html_invalid_xml.html'))
+VALID_HTML_INVALID_XML_XML = normpath(join(DATA_FOLDER, 'valid_html_invalid_xml.xml'))
+HTML_DATASOURCE_WITH_UPDATES = normpath(join(DATA_FOLDER, 'html_with_updates.html'))
+SAME_TEST_NAME = normpath(join(DATA_FOLDER, 'same_test_name.html'))
 
 
 class _TestIO(unittest.TestCase):
