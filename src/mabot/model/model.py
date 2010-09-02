@@ -648,6 +648,7 @@ class ManualMessage(robotapi.Message):
         self.level = level or status_level
         self.message = message
         self.html = False
+        self.linkable = False
 
 
 def get_includes_and_excludes_from_pattern(pattern):

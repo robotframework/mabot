@@ -19,7 +19,10 @@ try:
     from robot.serializing.testoutput import RobotTestOutput as _RobotTestOutput
     from robot.common import UserErrorHandler
     from robot.running.model import RunnableTestSuite, RunnableTestCase
-    from robot.output.readers import Message
+    try:
+        from robot.output.readers import MessageFromXml as Message
+    except ImportError:
+        from robot.output.readers import Message
     from robot.running import TestSuite
     from robot.conf import RobotSettings
     from robot.running.namespace import Namespace
