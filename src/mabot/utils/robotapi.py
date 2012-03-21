@@ -68,7 +68,6 @@ class _ResultFromXML(object):
     def serialize_output(self, path, _non_needed):        
         from robot.reporting.outputwriter import OutputWriter
         serializer = OutputWriter(path)
-        serializer._generator = 'Mabot'
         self.suite.serialize(serializer)
         from robot.common import Statistics 
         statistics = Statistics(self.suite, ())
