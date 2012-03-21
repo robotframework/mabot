@@ -16,8 +16,6 @@ from os.path import dirname, join, normcase
 
 import unittest
 
-from robot.common.model import BaseTestSuite, BaseTestCase
-
 from mabot.model.io import IO
 from mabot.model import model
 
@@ -226,8 +224,8 @@ class TestAddDataFromOtherItem(_TestAddingData):
     def _add_info(self, test):
         test.status = 'PASS'
         test.message = 'Hello'
-        test.starttime = '20010101 21:21:21'
-        test.endtime = '20010101 21:21:21'
+        test.starttime = '20010101 21:21:21.000'
+        test.endtime = '20010101 21:21:21.000'
         test.tags =  ['missing-tag']
 
     def _tests_are_unequal(self, test, other_test):
@@ -281,7 +279,7 @@ class TestSavingWhenChangesInKeywords(_TestAddingData):
         model.tkMessageBox = self.dialog.call
         _TestAddingData.setUp(self)
         self.other_test.keywords.pop(1)
-        self.other_test.endtime = '2008010101 10:10:10'
+        self.other_test.endtime = '20080101 10:10:10.000'
         self.test.status = 'PASS'
         self.test.message = 'Hello'
 
@@ -352,7 +350,7 @@ class TestLoadOther(_TestAddingData):
 
     def test_load_other_when_other_has_modifications(self):
         self.test.is_modified = False
-        self.other_test.endtime = '2008010101 10:10:10'
+        self.other_test.endtime = '20080101 10:10:10.100'
         self.assertTrue(self.test._load_other(self.other_test, True))
 
     def _modify_both_items(self):
@@ -360,7 +358,7 @@ class TestLoadOther(_TestAddingData):
         self.other_test.status = 'PASS'
         self.other_test.message = 'working'
         self.other_test.tags = ['tag-1', 'tag-2']
-        self.other_test.endtime = '2008010101 10:10:10'
+        self.other_test.endtime = '20080101 10:10:10.100'
 
     def test_load_other_when_both_have_modifications(self):
         self._modify_both_items()
@@ -394,7 +392,7 @@ Do you want your changes to be overridden?"""
 
     def test_load_other_when_both_have_modifications_no_differences(self):
         self.test.is_modified = True
-        self.other_test.endtime = '2008010101 10:10:10'
+        self.other_test.endtime = '20080101 10:10:10.100'
         self.mock.return_ = True
         self.assertFalse(self.test._load_other(self.other_test, self.mock.call),
                          'Message, status and tags are same, should not update items')
@@ -410,7 +408,7 @@ class TestLoadOtherWithKeywords(_TestAddingData):
         self.kw.is_modified = True
         self.other_kw.status = 'PASS'
         self.other_kw.message = 'working'
-        self.other_kw.endtime = '2008010101 10:10:10'
+        self.other_kw.endtime = '20080101 10:10:10.100'
         self.mock = MockDialog()
 
     def test_load_other_with_keywords(self):
@@ -491,6 +489,26 @@ class TestGettingTags(unittest.TestCase):
     def test_getting_tags_from_directory_suite(self):
         tags = self.suite.get_all_visible_tags()
         self.assertEquals(['tag-1', 'tag-2', 'tag-3'], tags)
+
+class TestAbstrackManualModel(_TestAddingData):
+
+    def test_get_valid_time_with_robots_old_default_time(self):
+        self.assertEquals(self.suite._get_valid_time('N/A'), model.EMPTY_TIME)
+    
+    def test_get_valid_time_with_mabots_old_default_time(self):
+        self.assertEquals(self.suite._get_valid_time('00000000 00:00:00.000'), model.EMPTY_TIME)
+
+    def test_get_valid_time_with_new_default_time(self):
+        self.assertEquals(self.suite._get_valid_time('20000101 00:00:00.000'), model.EMPTY_TIME)
+
+    def test_get_valid_time_with_too_short_value(self):
+        self.assertEquals(self.suite._get_valid_time('20010101 00:00:00'), model.EMPTY_TIME)
+
+    def test_get_valid_time_with_too_long_value(self):
+        self.assertEquals(self.suite._get_valid_time('20010101 00:00:00.0000'), model.EMPTY_TIME)
+
+    def test_get_valid_time_with_valid_value_is_not_changed(self):
+        self.assertEquals(self.suite._get_valid_time('20111111 11:11:11.111'), '20111111 11:11:11.111')
 
 
 class MockDialog:
