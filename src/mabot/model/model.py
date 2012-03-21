@@ -19,6 +19,7 @@ from mabot.settings import SETTINGS
 from mabot import utils
 from mabot.utils import robotapi
 
+EMPTY_TIME = '20000101 00:00:00.000'
 
 class Modified:
 
@@ -97,13 +98,17 @@ class AbstractManualModel(object):
         self.parent = parent
         self.doc = item.doc
         self.name = item.name
-        self.starttime = self.endtime = '00000000 00:00:00.000'
-        self.status = self._get_status(item)
+        self.starttime = self.endtime = EMPTY_TIME
+        self.status = self._get_status_if_available(item)
         self.visible = True
+        self._id = None # Needed from RF 2.6 onwards
 
-    def _get_status(self, item):
-        """Gets the status correctly from robot.running and robot.output items.
-        """
+    @property
+    def elapsedtime(self):
+        return robotapi.get_elapsed_time_as_string(self.starttime, self.endtime)
+
+    def _get_status_if_available(self, item):
+        """Gets the status correctly from robot.running and robot.output items."""
         status = getattr(item, 'status', 'FAIL')
         return status == 'PASS' and 'PASS' or 'FAIL'
 
@@ -184,6 +189,14 @@ class AbstractManualModel(object):
 
     def is_keyword(self):
         return isinstance(self, ManualKeyword)
+        
+    def _get_setup_keyword(self, item, from_xml):
+        kw = item.setup if hasattr(item, 'setup') else item.keywords.setup
+        return self._get_fixture_keyword(kw, from_xml)
+
+    def _get_teardown_keyword(self, item, from_xml):
+        kw = item.setup if hasattr(item, 'teardown') else item.keywords.teardown
+        return self._get_fixture_keyword(kw, from_xml)
 
     def _get_fixture_keyword(self, kw, from_xml):
         if not from_xml:
@@ -194,6 +207,13 @@ class AbstractManualModel(object):
 
     def has_same_name(self, other):
         return robotapi.eq(self.name, other.name, ignore=['_'])
+
+    def _get_valid_time(self, timestamp):
+        if timestamp == '00000000 00:00:00.000':
+            return EMPTY_TIME
+        if len(timestamp) != 21:
+            return EMPTY_TIME
+        return timestamp
 
 
 class AbstractManualTestOrKeyword(AbstractManualModel):
@@ -236,8 +256,7 @@ class AbstractManualTestOrKeyword(AbstractManualModel):
         return s_diffs, o_diffs
 
     def _saved_after_loading(self, other):
-        elapsed = robotapi.get_elapsed_time(self.endtime, other.endtime)
-        return elapsed != '00:00:00.000'
+        return robotapi.get_elapsed_time(self.endtime, other.endtime) != 0
 
     def _add_info_from_other(self, other):
         self.starttime = other.starttime
@@ -261,18 +280,16 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
         AbstractManualModel.__init__(self, suite, parent)
         self.longname = suite.longname
         self.metadata = suite.metadata
-        self.critical = suite.critical
-        self.critical_stats = suite.critical_stats
-        self.all_stats = suite.all_stats
-        self.setup = self._get_fixture_keyword(suite.setup, from_xml)
-        self.teardown = self._get_fixture_keyword(suite.teardown, from_xml)
+        self.critical = suite.critical if hasattr(suite, 'critical') else True
+        self.setup = self._get_setup_keyword(suite, from_xml)
+        self.teardown = self._get_teardown_keyword(suite, from_xml)
         self.suites = [ManualSuite(sub_suite, self, from_xml) for sub_suite in suite.suites]
         self.tests = [ManualTest(test, self, from_xml) for test in suite.tests]
         self._update_status()
         self.source = suite.source
         if from_xml:
-            self.starttime = suite.starttime
-            self.endtime = suite.endtime
+            self.starttime = self._get_valid_time(suite.starttime)
+            self.endtime = self._get_valid_time(suite.endtime)
         self.saving = False
         self._check_no_duplicate_tests()
 
@@ -419,14 +436,14 @@ class ManualTest(robotapi.RunnableTestCase, AbstractManualTestOrKeyword):
     def __init__(self, test, parent, from_xml=False):
         AbstractManualModel.__init__(self, test, parent)
         if from_xml:
-            self.starttime = test.starttime
-            self.endtime = test.endtime
+            self.starttime = self._get_valid_time(test.starttime)
+            self.endtime = self._get_valid_time(test.endtime)
             self.message = test.message or ""
         else:
             self.message = self._get_default_message()
         self.longname = test.longname
-        self.setup = self._get_fixture_keyword(test.setup, from_xml)
-        self.teardown = self._get_fixture_keyword(test.teardown, from_xml)
+        self.setup = self._get_setup_keyword(test, from_xml)
+        self.teardown = self._get_teardown_keyword(test, from_xml)
         self.tags = robotapi.normalize_tags(test.tags)
         self.keywords = [ ManualKeyword(kw, self, from_xml) for kw in test.keywords ]
         self.critical = test.critical
@@ -574,13 +591,14 @@ class ManualKeyword (AbstractManualTestOrKeyword):
     def __init__(self, kw, parent, from_xml):
         AbstractManualModel.__init__(self, kw, parent)
         if from_xml:
-            self.starttime = kw.starttime
-            self.endtime = kw.endtime
+            self.starttime = self._get_valid_time(kw.starttime)
+            self.endtime = self._get_valid_time(kw.endtime)
             if len(kw.messages) > 0:
-                self.messages = kw.messages[:-1]
-                self.message = kw.messages[-1].message
-                self.msg_timestamp = kw.messages[-1].timestamp
-                self.msg_level = kw.messages[-1].level
+                messages = list(kw.messages) # Support for RF 2.7
+                self.messages = messages[:-1]
+                self.message = messages[-1].message
+                self.msg_timestamp = messages[-1].timestamp
+                self.msg_level = messages[-1].level
             else:
                 self.messages = []
                 self.message = self._get_default_message()
@@ -649,6 +667,9 @@ class ManualMessage(robotapi.Message):
         self.message = message
         self.html = False
         self.linkable = False
+
+    def serialize(self, serializer):
+        serializer.message(self)
 
 
 def get_includes_and_excludes_from_pattern(pattern):
