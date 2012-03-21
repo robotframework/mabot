@@ -29,6 +29,7 @@ options:
 
 
 import unittest, os, sys, re, getopt
+from robot.version import get_version
 
 base = os.path.abspath(os.path.normpath(os.path.split(sys.argv[0])[0]))
 for path in [ "../src" ]:
@@ -68,7 +69,7 @@ def parse_args(argv):
             raise getopt.error, 'no arguments accepted, got %s' % (args)
     except getopt.error, err:
         usage_exit(err)
-    for opt, value in options:
+    for opt, _ in options:
         if opt in ('-h','-H','-?','--help'):
             usage_exit()
         if opt in ('-q','--quit'):
@@ -92,6 +93,7 @@ def usage_exit(msg=None):
 
 
 if __name__ == '__main__':
+    print "Testing with Robot version: %s" % get_version()
     docs, vrbst = parse_args(sys.argv[1:])
     tests = get_tests()
     suite = unittest.TestSuite(tests)
