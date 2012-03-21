@@ -16,10 +16,10 @@
 import copy
 import os
 import unittest
-from os.path import abspath, dirname, join
+from os.path import dirname, join
 import shutil
 
-from robot.utils.asserts import *
+from robot.utils.asserts import assert_raises_with_msg
 from robot.utils import normpath
 from robot.version import get_version
 ROBOT_VERSION = get_version()
@@ -73,20 +73,20 @@ class TestLoadData(_TestIO):
         return suite
 
     def test_load_data_without_datasources(self):
-        suite = self._test_loading(None, '')
+        self._test_loading(None, '')
 
     def test_load_data_with_only_html_datasource(self):
-        suite = self._test_loading(HTML_DATASOURCE_ONLY, 'Testcases')
+        self._test_loading(HTML_DATASOURCE_ONLY, 'Testcases')
 
     def test_load_data_with_only_html_datasource_and_xml_loading_on(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        suite = self._test_loading(HTML_DATASOURCE_ONLY, 'Testcases')
+        self._test_loading(HTML_DATASOURCE_ONLY, 'Testcases')
 
     def test_load_data_with_only_tsv_datasource(self):
-        suite = self._test_loading(TSV_DATASOURCE_ONLY, 'Tsv Testcases')
+        self._test_loading(TSV_DATASOURCE_ONLY, 'Tsv Testcases')
 
     def test_load_data_with_only_xml_datasource(self):
-        suite = self._test_loading(XML_DATASOURCE_ONLY, 'Xml Testcases')
+        self._test_loading(XML_DATASOURCE_ONLY, 'Xml Testcases')
 
     def test_load_data_with_html_and_xml_datasources_xml_loading_off(self):
         io.SETTINGS["always_load_old_data_from_xml"] = False
@@ -114,7 +114,7 @@ class TestLoadData(_TestIO):
 
     def test_load_datasource_and_xml_with_no_updates_in_html(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        suite = self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases2')
+        self._test_loading(HTML_DATASOURCE_WITH_XML, 'Testcases2')
         self.assertFalse(DATA_MODIFIED.is_modified(),
                         "Status should be False as there is no modifications.")
 
@@ -156,8 +156,10 @@ class TestLoadData(_TestIO):
     def _get_invalid_xml_message(self, path):
         if ROBOT_VERSION < '2.1':
             msg = "File '%s' is not a valid XML file.\n"
+        elif ROBOT_VERSION >= '2.7':
+            msg = "Reading XML source '%s' failed: no element found: line 1, column 0\n"
         else:
-            msg = "Opening XML file '%s' failed: SyntaxError: no element found: line 1, column 0\n"
+            msg = "Opening XML file '%s' failed: ParseError: no element found: line 1, column 0\n"
         return msg % (path)
 
     def test_load_data_with_xml_error_and_datasource_error(self):
@@ -191,7 +193,7 @@ class TestGetDatasourceAndXml(_TestIO):
 
     def test_get_datasource_and_xml_from_dir_ending_with_os_sep(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        folder = SUITES_FOLDER.endswith(os.sep) and SUITES_FOLDER
+        SUITES_FOLDER.endswith(os.sep) and SUITES_FOLDER
         self.assertEqual(self.io._get_datasource_and_xml_from(SUITES_FOLDER_WITH_OS_SEP),
                          (SUITES_FOLDER, SUITES_FOLDER+'.xml'))
 
@@ -360,7 +362,8 @@ class TestSavingData(_TestIO):
             self.assertEquals(self.io.output, output)
             self.assertTrue(os.path.exists(output))
         finally:
-            os.remove(output)
+            if os.path.exists(output):
+                os.remove(output)
 
     def test_saving_when_data_is_reloaded_from_xml(self):
         io.SETTINGS["check_simultaneous_save"] = True
