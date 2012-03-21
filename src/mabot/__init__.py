@@ -59,7 +59,7 @@ $ mabot.py output.xml
 import sys
 
 from mabot import settings
-from mabot.utils.robotapi import Information, DataError, ArgumentParser
+from mabot.utils.robotapi import Information, DataError, ArgumentParser, ROBOT_VERSION
 from mabot import model
 from mabot import ui
 from mabot.ui.main import Mabot
@@ -68,15 +68,20 @@ from mabot.version import version
 
 
 def run(args):
-    ap = ArgumentParser(__doc__, version=version, arg_limits=(0,1))
+    aparser = ArgumentParser(__doc__, version=version, arg_limits=(0,1))
     try:
-        opts, args = ap.parse_args(args, help='help', version='version',
-                                   check_args=True)
+        opts, args = _get_opts_and_args(aparser, args)
     except Information, msg:
         _exit(str(msg))
     except DataError, err:
         _exit(str(err), 1)
     Mabot(args and args[0] or None, opts)
+
+def _get_opts_and_args(aparser, args):
+    if ROBOT_VERSION < '2.7':
+        return aparser.parse_args(args, help='help', version='version',
+                                  check_args=True)
+    return aparser.parse_args(args)
 
 def _exit(message, rc=0):
     print message
