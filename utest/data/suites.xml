@@ -4,18 +4,10 @@
 <doc></doc>
 <metadata>
 </metadata>
-<critical>
-</critical>
-<filtered>
-</filtered>
 <suite name="Testcases">
 <doc></doc>
 <metadata>
 </metadata>
-<critical>
-</critical>
-<filtered>
-</filtered>
 <test critical="yes" name="Passing" timeout="">
 <doc></doc>
 <tags>
@@ -59,10 +51,6 @@
 <doc></doc>
 <metadata>
 </metadata>
-<critical>
-</critical>
-<filtered>
-</filtered>
 <test critical="yes" name="Passing" timeout="">
 <doc></doc>
 <tags>
@@ -118,10 +106,6 @@
 <doc></doc>
 <metadata>
 </metadata>
-<critical>
-</critical>
-<filtered>
-</filtered>
 <test critical="yes" name="First One" timeout="">
 <doc></doc>
 <tags>
@@ -154,6 +138,4 @@
 <stat fail="0" doc="Suites.Tsv Testcases" pass="1">s.Tsv Testcases</stat>
 </suite>
 </statistics>
-<syslog>
-</syslog>
 </robot>

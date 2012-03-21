@@ -4,10 +4,6 @@
 <doc></doc>
 <metadata>
 </metadata>
-<critical>
-</critical>
-<filtered>
-</filtered>
 <test critical="yes" name="TC" timeout="">
 <doc></doc>
 <tags>

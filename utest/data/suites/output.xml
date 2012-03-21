@@ -4,10 +4,6 @@
 <doc></doc>
 <metadata>
 </metadata>
-<critical>
-</critical>
-<filtered>
-</filtered>
 <test critical="yes" name="Passing" timeout="">
 <doc></doc>
 <tags>
@@ -60,6 +56,4 @@
 <stat fail="1" doc="Testcases" pass="1">Testcases</stat>
 </suite>
 </statistics>
-<syslog>
-</syslog>
 </robot>
