@@ -658,7 +658,7 @@ Do you want your changes to be overridden?"""
         return "Conflicting Keyword Results!", message
 
 
-class ManualMessage(robotapi.Message):
+class ManualMessage(object):
 
     def __init__(self, message, status, timestamp=None, level=None):
         self.timestamp = timestamp or '00000000 00:00:00.000'
@@ -669,7 +669,7 @@ class ManualMessage(robotapi.Message):
         self.linkable = False
 
     def serialize(self, serializer):
-        serializer.message(self)
+        serializer.log_message(self)
 
 
 def get_includes_and_excludes_from_pattern(pattern):

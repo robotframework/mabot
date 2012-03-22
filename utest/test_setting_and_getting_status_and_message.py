@@ -21,6 +21,7 @@ from mabot.model.model import DATA_MODIFIED
 
 
 DATA = os.path.join(os.path.dirname(__file__), 'data', 'testcases.xml')
+SAVED_XML = DATA.replace('testcases.xml', 'utest.xml')
 
 
 class TestSettingStatusAndMessage(unittest.TestCase):
@@ -31,6 +32,8 @@ class TestSettingStatusAndMessage(unittest.TestCase):
 
     def tearDown(self):
         DATA_MODIFIED.saved()
+        if os.path.exists(SAVED_XML):
+            os.remove(SAVED_XML)
 
     def test_pass_all_with_suite(self):
         self.suite.set_all('PASS')
@@ -43,7 +46,6 @@ class TestSettingStatusAndMessage(unittest.TestCase):
         self._messages_should_be(self.suite.tests[2].keywords, expected_messages)
         self._messages_should_be(self.suite.tests[3].keywords, expected_messages)
 
-
     def test_fail_all_with_suite(self):
         self.suite.set_all('FAIL', 'Suite failure')
         self._all_status_should_be(self.suite, 'FAIL')
@@ -54,7 +56,20 @@ class TestSettingStatusAndMessage(unittest.TestCase):
             self._messages_should_be(self.suite.tests[i].keywords,
                                      expected_messages)
 
-    def test_fail_all_with_test(self):
+    def test_fail_all_with_suite_is_saved_correctly(self):
+        self.suite.set_all('FAIL', 'Suite failure')
+        self.io.save_data(SAVED_XML, lambda x:True)
+        self.suite = self.io.load_data(SAVED_XML)
+        self._all_status_should_be(self.suite, 'FAIL')
+        expected_messages = ['Suite failure\nPassing', 'Suite failure',
+                             'Suite failure\nFailing', 'Suite failure']
+        self._messages_should_be(self.suite.tests, expected_messages)
+        for i in range(0, 4):
+            self._messages_should_be(self.suite.tests[i].keywords,
+                                     expected_messages)
+        
+
+    def test_pass_all_with_test(self):
         test = self.suite.tests[0]
         test.set_all('PASS')
         self._all_status_should_be(test, 'PASS')

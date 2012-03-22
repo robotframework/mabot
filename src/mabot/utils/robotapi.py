@@ -16,15 +16,7 @@ import sys
 
 try:
     from robot.common import UserErrorHandler
-    from robot.running.model import RunnableTestSuite, RunnableTestCase
-    try:
-        from robot.output.readers import MessageFromXml as Message
-    except ImportError:
-        try:
-            from robot.output.readers import Message
-        except ImportError:
-            from robot.output.loggerhelper import Message
-            
+    from robot.running.model import RunnableTestSuite, RunnableTestCase            
     from robot.running import TestSuite
     from robot.conf import RobotSettings
     from robot.running.namespace import Namespace
