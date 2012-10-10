@@ -58,11 +58,14 @@ class _TestIO(unittest.TestCase):
         DATA_MODIFIED.saved()
         io.SETTINGS = self.orig_settings
 
-    def _test_error(self, path, message, method=None):
+    def _test_error(self, path, method=None):
         if not method:
             method = self.io.load_data
-        message = "Could not load data!\n%s" % (message)
-        assert_raises_with_msg(IOError, message, method, path)
+        try:
+            method(path)
+            self.fail('Should throw IOError')
+        except IOError, expected:
+            pass
 
 
 class TestLoadData(_TestIO):
@@ -120,53 +123,33 @@ class TestLoadData(_TestIO):
 
     def test_load_datasource_and_xml_with_same_test_case_names(self):
         io.SETTINGS["always_load_old_data_from_xml"] = False
-        msg = "Found test 'TC' from suite 'Same Test Name' 2 times.\n"
-        msg += "Mabot supports only unique test case names!\n"
-        self._test_error(SAME_TEST_NAME, msg)
+        self._test_error(SAME_TEST_NAME)
 
     def test_load_data_with_html_suite_with_dublicate_keywords(self):
-        msg = "Could not create keyword 'UK' in testcase 'Duplicate Keywords.TC1'."
-        msg += "\nKeyword 'UK' defined multiple times\n"
-        self._test_error(DUPLICATE_USERKEYWORDS, msg)
+        self._test_error(DUPLICATE_USERKEYWORDS)
 
     def test_load_data_with_non_existing_datasource(self):
-        msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
-        self._test_error(NON_EXISTING_DATASOURCE, msg)
+        self._test_error(NON_EXISTING_DATASOURCE)
 
     def test_load_data_with_non_existing_xml_datasource(self):
-        msg = "Path '%s' does not exist!" % (NON_EXISTING_XML)
-        self._test_error(NON_EXISTING_XML, msg)
+        self._test_error(NON_EXISTING_XML)
 
     def test_load_data_with_non_existing_datasource_with_xml_loading_on(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
-        self._test_error(NON_EXISTING_DATASOURCE, msg)
+        self._test_error(NON_EXISTING_DATASOURCE)
 
     def test_load_data_with_invalid_datasource_and_valid_xml(self):
         io.SETTINGS["include"] = ['no-tag']
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        msg = "Suite 'Testcases2' with includes 'no-tag' contains no test cases.\n"
-        self._test_error(HTML_DATASOURCE_WITH_XML, msg)
+        self._test_error(HTML_DATASOURCE_WITH_XML)
 
     def test_load_data_with_valid_datasource_and_invalid_xml(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        msg =  self._get_invalid_xml_message(VALID_HTML_INVALID_XML_XML)
-        self._test_error(VALID_HTML_INVALID_XML_DATASOURCE, msg)
-
-    def _get_invalid_xml_message(self, path):
-        if ROBOT_VERSION < '2.1':
-            msg = "File '%s' is not a valid XML file.\n"
-        elif ROBOT_VERSION >= '2.7':
-            msg = "Reading XML source '%s' failed: ParseError: no element found: line 1, column 0\n"
-        else:
-            msg = "Opening XML file '%s' failed: ParseError: no element found: line 1, column 0\n"
-        return msg % (path)
+        self._test_error(VALID_HTML_INVALID_XML_DATASOURCE)
 
     def test_load_data_with_xml_error_and_datasource_error(self):
         io.SETTINGS["always_load_old_data_from_xml"] = True
-        msg = "Parsing '%s' failed: File has no test case table. and\n" % (INVALID_HTML)
-        msg += self._get_invalid_xml_message(INVALID_XML)
-        self._test_error(INVALID_HTML, msg)
+        self._test_error(INVALID_HTML)
 
 
 class TestGetDatasourceAndXml(_TestIO):
@@ -203,13 +186,10 @@ class TestGetDatasourceAndXml(_TestIO):
                          (TSV_DATASOURCE_ONLY, TSV_DATASOURCE_ONLY.replace('.tsv', '.xml')))
 
     def test_get_datasource_and_xml_from_txt(self):
-        msg = "Parsing '%s' failed: Unsupported file format 'inv'.\n" % (INVALID_FORMAT_DATASOURCE)
-        self._test_error(INVALID_FORMAT_DATASOURCE, msg, self.io.load_data)
+        self._test_error(INVALID_FORMAT_DATASOURCE)
 
     def test_get_datasource_and_xml_from_non_existing_file(self):
-        msg = "Path '%s' does not exist!" % (NON_EXISTING_DATASOURCE)
-        self._test_error(NON_EXISTING_DATASOURCE, msg,
-                         self.io._get_datasource_and_xml_from)
+        self._test_error(NON_EXISTING_DATASOURCE, self.io._get_datasource_and_xml_from)
 
 
 class TestBackUp(_TestIO):
