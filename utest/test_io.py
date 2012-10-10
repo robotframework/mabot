@@ -157,7 +157,7 @@ class TestLoadData(_TestIO):
         if ROBOT_VERSION < '2.1':
             msg = "File '%s' is not a valid XML file.\n"
         elif ROBOT_VERSION >= '2.7':
-            msg = "Reading XML source '%s' failed: no element found: line 1, column 0\n"
+            msg = "Reading XML source '%s' failed: ParseError: no element found: line 1, column 0\n"
         else:
             msg = "Opening XML file '%s' failed: ParseError: no element found: line 1, column 0\n"
         return msg % (path)
