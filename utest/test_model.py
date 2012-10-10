@@ -18,6 +18,7 @@ import unittest
 
 from mabot.model.io import IO
 from mabot.model import model
+from mabot.model.model import ManualMessage
 
 
 class _TestAddingData(unittest.TestCase):
@@ -509,6 +510,14 @@ class TestAbstrackManualModel(_TestAddingData):
 
     def test_get_valid_time_with_valid_value_is_not_changed(self):
         self.assertEquals(self.suite._get_valid_time('20111111 11:11:11.111'), '20111111 11:11:11.111')
+
+
+class TestManualMessage(unittest.TestCase):
+
+    def test_manual_message_default_timestamp(self):
+        mm = ManualMessage('Mjaijai', 'PASS')
+        self.assertNotEqual(mm.timestamp, '00000000 00:00:00.000')
+        self.assertEqual(len(mm.timestamp), len('00000000 00:00:00.000'))
 
 
 class MockDialog:
