@@ -14,6 +14,8 @@
 
 
 import tkMessageBox
+from datetime import datetime
+from time import time
 
 from mabot.settings import SETTINGS
 from mabot import utils
@@ -661,12 +663,18 @@ Do you want your changes to be overridden?"""
 class ManualMessage(object):
 
     def __init__(self, message, status, timestamp=None, level=None):
-        self.timestamp = timestamp or '00000000 00:00:00.000'
-        status_level = status == 'PASS' and 'INFO' or 'FAIL'
-        self.level = level or status_level
+        self.timestamp = timestamp or datetime.fromtimestamp(time()).strftime('%Y%m%d %H:%M:%S.000')
+        self.level = self._get_level(level, status)
         self.message = message
         self.html = False
         self.linkable = False
+
+    def _get_level(self, level, status):
+        if level:
+            return level
+        if status == 'PASS':
+            return 'INFO'
+        return 'FAIL'
 
     def serialize(self, serializer):
         serializer.log_message(self)
