@@ -92,13 +92,14 @@ class UserKeywordLibrary:
 
 KW_LIB = UserKeywordLibrary()
 
+import robot.utils as u
 
 class AbstractManualModel(object):
 
     def __init__(self, item, parent=None):
         self.is_modified = False
         self.parent = parent
-        self.doc = item.doc
+        self.doc = u.unescape(item.doc)
         self.name = item.name
         self.starttime = self.endtime = EMPTY_TIME
         self.status = self._get_status_if_available(item)
