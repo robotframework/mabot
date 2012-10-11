@@ -517,7 +517,7 @@ long documentation line will be causing possible problems if we are not really r
 new line which will have more information about everything
 
 new paragraph'''
-        self.assertMultiLineEqual(self.suite.suites[0].tests[0].doc, expected)
+        self.assertEqual(self.suite.suites[0].tests[0].doc, expected)
 
 class TestManualMessage(unittest.TestCase):
 
