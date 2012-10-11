@@ -491,7 +491,7 @@ class TestGettingTags(unittest.TestCase):
         tags = self.suite.get_all_visible_tags()
         self.assertEquals(['tag-1', 'tag-2', 'tag-3'], tags)
 
-class TestAbstrackManualModel(_TestAddingData):
+class TestAbstractManualModel(_TestAddingData):
 
     def test_get_valid_time_with_robots_old_default_time(self):
         self.assertEquals(self.suite._get_valid_time('N/A'), model.EMPTY_TIME)
@@ -511,6 +511,13 @@ class TestAbstrackManualModel(_TestAddingData):
     def test_get_valid_time_with_valid_value_is_not_changed(self):
         self.assertEquals(self.suite._get_valid_time('20111111 11:11:11.111'), '20111111 11:11:11.111')
 
+    def test_testcase_multiline_documentation(self):
+        expected = u'''\
+long documentation line will be causing possible problems if we are not really really careful
+new line which will have more information about everything
+
+new paragraph'''
+        self.assertMultiLineEqual(self.suite.suites[0].tests[0].doc, expected)
 
 class TestManualMessage(unittest.TestCase):
 

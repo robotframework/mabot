@@ -20,9 +20,9 @@ try:
     from robot.running import TestSuite
     from robot.conf import RobotSettings
     from robot.running.namespace import Namespace
-    from robot.utils import ArgumentParser, get_timestamp, normalize,\
-                            elapsed_time_to_string, eq, normalize_tags
-    from robot.utils import get_elapsed_time
+    from robot.utils import (ArgumentParser, get_timestamp, normalize,
+                            elapsed_time_to_string, eq, normalize_tags,
+                            unescape, get_elapsed_time)
     from robot import version
     ROBOT_VERSION = version.get_version()
     from robot.errors import DataError
@@ -33,7 +33,7 @@ except ImportError, error:
     print """All needed Robot modules could not be imported.
 Check your Robot installation."""
     print "Error was: %s" % (error)
-    sys.exit(1)
+    raise error
 
 
 def XmlTestSuite(suite):
