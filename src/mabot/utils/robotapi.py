@@ -16,8 +16,9 @@ import sys
 
 try:
     from robot.common import UserErrorHandler
-    from robot.running.model import RunnableTestSuite, RunnableTestCase            
+    from robot.common.model import BaseTestSuite
     from robot.running import TestSuite
+    from robot.running.model import RunnableTestSuite, RunnableTestCase
     from robot.conf import RobotSettings
     from robot.running.namespace import Namespace
     from robot.utils import (ArgumentParser, get_timestamp, normalize,
@@ -25,8 +26,7 @@ try:
                             unescape, get_elapsed_time)
     from robot import version
     ROBOT_VERSION = version.get_version()
-    from robot.errors import DataError
-    from robot.errors import Information
+    from robot.errors import DataError, Information
     from robot.output.logger import LOGGER
     LOGGER.disable_automatic_console_logger()
 except ImportError, error:

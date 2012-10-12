@@ -278,10 +278,12 @@ class ManualSuite(robotapi.RunnableTestSuite, AbstractManualModel):
     def __init__(self, suite, parent=None, from_xml=False):
         if not from_xml:
             KW_LIB.add_suite_keywords(suite)
+        robotapi.BaseTestSuite.__init__(self, suite.name, suite.source)
         AbstractManualModel.__init__(self, suite, parent)
         self.longname = suite.longname
         self.metadata = suite.metadata
-        self.critical = suite.critical if hasattr(suite, 'critical') else True
+        if hasattr(suite, 'critical'):
+            self.critical = suite.critical
         self.setup = self._get_setup_keyword(suite, from_xml)
         self.teardown = self._get_teardown_keyword(suite, from_xml)
         self.suites = [ManualSuite(sub_suite, self, from_xml) for sub_suite in suite.suites]
