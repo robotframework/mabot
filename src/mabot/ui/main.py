@@ -19,6 +19,7 @@ import tkMessageBox
 import tkFileDialog
 import tkSimpleDialog
 from idlelib import TreeWidget
+import traceback
 
 from tree import SuiteTreeItem
 from tree import Node
@@ -73,6 +74,7 @@ class Mabot:
             self._update_ui()
 
     def _show_error(self, error, message):
+        traceback.print_exc()
         tkMessageBox.showerror(message, error[0])
 
     def _create_ui(self):
@@ -263,7 +265,7 @@ class Mabot:
             progress.destroy()
         except Exception, error:
             progress.destroy()
-            tkMessageBox.showerror('Saving Failed!', error.message)
+            self._show_error(error, 'Saving Failed!')
             return
         if changes:
             self._init_tree_view()
