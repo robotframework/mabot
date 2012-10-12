@@ -73,6 +73,8 @@ class TestLoadData(_TestIO):
     def _test_loading(self, source, name):
         suite = self.io.load_data(source)
         self.assertEqual(suite.name, name)
+        if name:
+            self.assertFalse(suite.critical.is_critical('something'))
         return suite
 
     def test_load_data_without_datasources(self):
