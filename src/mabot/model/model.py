@@ -671,11 +671,16 @@ Do you want your changes to be overridden?"""
 class ManualMessage(object):
 
     def __init__(self, message, status, timestamp=None, level=None):
-        self.timestamp = timestamp or datetime.fromtimestamp(time()).strftime('%Y%m%d %H:%M:%S.000')
+        self.timestamp = self._get_timestamp(timestamp)
         self.level = self._get_level(level, status)
         self.message = message
         self.html = False
         self.linkable = False
+
+    def _get_timestamp(self, timestamp):
+        if not timestamp or timestamp == '00000000 00:00:00.000':
+            return datetime.fromtimestamp(time()).strftime('%Y%m%d %H:%M:%S.000')
+        return timestamp
 
     def _get_level(self, level, status):
         if level:
