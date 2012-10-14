@@ -4,3 +4,5 @@ log.html
 report.html
 output.xml
 tmp
+dist
+build
