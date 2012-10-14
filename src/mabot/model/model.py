@@ -589,7 +589,7 @@ Do you want your changes to be overridden?"""
         AbstractManualTestOrKeyword._child_status_updated(self)
 
 
-class ManualKeyword (AbstractManualTestOrKeyword):
+class ManualKeyword(AbstractManualTestOrKeyword):
 
     def __init__(self, kw, parent, from_xml):
         AbstractManualModel.__init__(self, kw, parent)
