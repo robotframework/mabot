@@ -612,16 +612,17 @@ class ManualKeyword(AbstractManualTestOrKeyword):
             self.msg_timestamp = messages[-1].timestamp
             self.msg_level = messages[-1].level
         else:
-            self.messages = []
-            self.message = self._get_default_message()
-            self.msg_timestamp = self.msg_level = None
+            self._init_empty_messages()
         self.keywords = [ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords]
 
     def _init_from_test_material(self):
+        self._init_empty_messages()
+        self.keywords = [ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self)]
+
+    def _init_empty_messages(self):
         self.messages = []
         self.message = ""
         self.msg_timestamp = self.msg_level = None
-        self.keywords = [ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self)]
 
     def add_results(self, other, add_from_xml, override_method):
         if self._load_other(other, override_method):
