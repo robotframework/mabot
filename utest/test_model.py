@@ -526,6 +526,11 @@ class TestManualMessage(unittest.TestCase):
         self.assertNotEqual(mm.timestamp, '00000000 00:00:00.000')
         self.assertEqual(len(mm.timestamp), len('00000000 00:00:00.000'))
 
+    def test_manual_message_fixes_invalid_timestamp(self):
+        mm = ManualMessage('All your base are belong to us', 'FAIL', timestamp='00000000 00:00:00.000')
+        self.assertNotEqual(mm.timestamp, '00000000 00:00:00.000')
+        self.assertEqual(len(mm.timestamp), len('00000000 00:00:00.000'))
+
 
 class MockDialog:
 
