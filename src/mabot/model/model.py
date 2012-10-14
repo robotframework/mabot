@@ -594,28 +594,34 @@ class ManualKeyword (AbstractManualTestOrKeyword):
     def __init__(self, kw, parent, from_xml):
         AbstractManualModel.__init__(self, kw, parent)
         if from_xml:
-            self.starttime = self._get_valid_time(kw.starttime)
-            self.endtime = self._get_valid_time(kw.endtime)
-            if len(kw.messages) > 0:
-                messages = list(kw.messages) # Support for RF 2.7
-                self.messages = messages[:-1]
-                self.message = messages[-1].message
-                self.msg_timestamp = messages[-1].timestamp
-                self.msg_level = messages[-1].level
-            else:
-                self.messages = []
-                self.message = self._get_default_message()
-                self.msg_timestamp = self.msg_level = None
-            self.keywords = [ ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords ]
+            self._init_from_xml(kw)
         else:
-            self.messages = []
-            self.message = ""
-            self.msg_timestamp = self.msg_level = None
-            self.keywords = [ ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self) ]
+            self._init_from_test_material()
         self.args = kw.args
         self.type = kw.type
         self.timeout = kw.timeout
         self.compare_attrs = ['status', 'message']
+
+    def _init_from_xml(self, kw):
+        self.starttime = self._get_valid_time(kw.starttime)
+        self.endtime = self._get_valid_time(kw.endtime)
+        if len(kw.messages) > 0:
+            messages = list(kw.messages) # Support for RF 2.7
+            self.messages = messages[:-1]
+            self.message = messages[-1].message
+            self.msg_timestamp = messages[-1].timestamp
+            self.msg_level = messages[-1].level
+        else:
+            self.messages = []
+            self.message = self._get_default_message()
+            self.msg_timestamp = self.msg_level = None
+        self.keywords = [ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords]
+
+    def _init_from_test_material(self):
+        self.messages = []
+        self.message = ""
+        self.msg_timestamp = self.msg_level = None
+        self.keywords = [ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self)]
 
     def add_results(self, other, add_from_xml, override_method):
         if self._load_other(other, override_method):
