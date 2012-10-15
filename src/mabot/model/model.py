@@ -617,7 +617,7 @@ class ManualKeyword(AbstractManualTestOrKeyword):
 
     def _init_from_test_material(self):
         self._init_empty_messages()
-        self.keywords = [ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name, self)]
+        self.keywords = [ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name or '', self)]
 
     def _init_empty_messages(self):
         self.messages = []
