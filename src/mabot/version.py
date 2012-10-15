@@ -14,4 +14,4 @@
 
 import time
 
-version = "trunk-%d%02d%02d" % (time.localtime()[:3])
+version = '0.9'
