@@ -29,6 +29,7 @@ def main():
           author       = 'Robot Framework Developers',
           author_email = 'robotframework-devel@googlegroups.com',
           url          = 'http://code.google.com/p/robotframework-mabot/',
+          download_url = 'http://code.google.com/p/robotframework-mabot/downloads/list',
           license      = 'Apache License 2.0',
           platforms    = 'any',
           package_dir  = { '' : 'src'},
