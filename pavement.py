@@ -77,7 +77,7 @@ def _run_nose(args):
     from nose import run as noserun
     _set_development_path()
     return noserun(defaultTest=TEST_DIR,
-                   argv=['', '--m=^test_'] + args)
+                   argv=['', '--with-xunit', '--xunit-file=nosetest.xml', '--m=^test_'] + args)
 
 @task
 def clean():
