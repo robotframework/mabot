@@ -57,6 +57,10 @@ $ mabot.py output.xml
 """
 
 import sys
+import os
+
+# Insert bundled robot to path before anything else
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib'))
 
 from mabot import settings
 from mabot.utils.robotapi import Information, DataError, ArgumentParser, ROBOT_VERSION

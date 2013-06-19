@@ -1,3 +1,8 @@
+include setup.py
+include pavement.py
+include paver-minilib.zip
 include src/bin/mabot.py
 include LICENSE.txt COPYRIGHT.txt INSTALL.txt MANIFEST.in
 recursive-include src *.gif
+recursive-include lib *.*
+

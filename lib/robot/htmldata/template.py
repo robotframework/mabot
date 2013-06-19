@@ -1,6 +1,4 @@
-#!/usr/local/bin python
-
-#  Copyright 2008 Nokia Siemens Networks Oyj
+#  Copyright 2008-2012 Nokia Siemens Networks Oyj
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,16 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import sys
-from os.path import dirname, normpath, abspath
-
-# Removes the path where this script is from sys.path allowing import of mabot
-script_path = normpath(abspath(dirname(__file__)))
-for path in sys.path:
-    if normpath(abspath(path)) == script_path:
-        sys.path.remove(path)
-from mabot import run
-
-
-if __name__ == '__main__':
-    run(sys.argv[1:])
+try:
+    from .jartemplate import HtmlTemplate
+except ImportError:
+    from .normaltemplate import HtmlTemplate
