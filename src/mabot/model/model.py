@@ -606,11 +606,9 @@ class ManualKeyword(AbstractManualTestOrKeyword):
         self.starttime = self._get_valid_time(kw.starttime)
         self.endtime = self._get_valid_time(kw.endtime)
         if len(kw.messages) > 0:
-            messages = list(kw.messages) # Support for RF 2.7
-            self.messages = messages[:-1]
-            self.message = messages[-1].message
-            self.msg_timestamp = messages[-1].timestamp
-            self.msg_level = messages[-1].level
+            self.message = list(kw.messages)[-1].message
+            self.msg_timestamp = self.message.timestamp
+            self.msg_level =self.message.level
         else:
             self._init_empty_messages()
         self.keywords = [ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords]
@@ -620,7 +618,6 @@ class ManualKeyword(AbstractManualTestOrKeyword):
         self.keywords = [ManualKeyword(sub_kw, self, False) for sub_kw in KW_LIB.get_keywords(self.name or '', self)]
 
     def _init_empty_messages(self):
-        self.messages = []
         self.message = ""
         self.msg_timestamp = self.msg_level = None
 
@@ -642,8 +639,6 @@ class ManualKeyword(AbstractManualTestOrKeyword):
 
     def serialize(self, serializer):
         serializer.start_keyword(self)
-        for message in self.messages:
-            message.serialize(serializer)
         #TODO: In case there are keywords and messages, the order is not kept in here
         #This can happen when reading XML from (p/j)ybot test execution
         if self.message:
