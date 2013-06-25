@@ -26,17 +26,17 @@ installation instructions.
 Usage
 -----
 
-Mabot is started with command `mabot.py` Additionally a path to test data or 
+Mabot is started with command `mabot` Additionally a path to test data or 
 saved xml can be given with possible command line options before the path. 
 Robot Frameworks `rebot` tool is used for post-processing outputs.
 
 Examples::
 
-  mabot.py
-  mabot.py --include manual my_tests.html
-  mabot.py results.xml
+  mabot
+  mabot --include manual my_tests.html
+  mabot results.xml
 
-For more information, run `mabot.py --help` or see 
+For more information, run `mabot --help` or see 
 http://code.google.com/p/robotframework-mabot/
 
 
