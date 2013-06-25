@@ -85,7 +85,7 @@ class UserKeywordLibrary:
         kw = self.keywords[name]
         if isinstance(kw, robotapi.UserErrorHandler):
             msg = "Could not create keyword '%s' in testcase '%s'.\n%s"
-            msg = msg % (kw.name, item.get_parent_testcase().longname, kw._error)
+            msg = msg % (kw.name, item.get_parent_testcase().longname, kw.error)
             raise Exception(msg)
         return kw.keywords
 
