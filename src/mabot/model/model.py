@@ -606,9 +606,10 @@ class ManualKeyword(AbstractManualTestOrKeyword):
         self.starttime = self._get_valid_time(kw.starttime)
         self.endtime = self._get_valid_time(kw.endtime)
         if len(kw.messages) > 0:
-            self.message = list(kw.messages)[-1].message
-            self.msg_timestamp = self.message.timestamp
-            self.msg_level =self.message.level
+            message = list(kw.messages)[-1]
+            self.message = message.message
+            self.msg_timestamp = message.timestamp
+            self.msg_level = message.level
         else:
             self._init_empty_messages()
         self.keywords = [ManualKeyword(sub_kw, self, True) for sub_kw in kw.keywords]
